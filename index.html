@@ -74,7 +74,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text-dar
 .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px}
 .hamburger span{display:block;width:22px;height:2px;background:var(--gold-light);border-radius:2px}
 
-#hero{min-height:100vh;background:radial-gradient(ellipse at 20% 50%,rgba(123,28,28,.35) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(74,14,14,.4) 0%,transparent 60%),linear-gradient(160deg,#2D0808 0%,#4A0E0E 40%,#1A0505 100%);display:flex;align-items:center;justify-content:center;padding:120px 2rem 4rem;text-align:center;position:relative;overflow:hidden}
+#hero{min-height:100vh;min-height:100dvh;background:radial-gradient(ellipse at 20% 50%,rgba(123,28,28,.35) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(74,14,14,.4) 0%,transparent 60%),linear-gradient(160deg,#2D0808 0%,#4A0E0E 40%,#1A0505 100%);display:flex;align-items:center;justify-content:center;padding:120px 2rem 4rem;text-align:center;position:relative;overflow:hidden}
 .hero-ornament{position:absolute;border:1px solid rgba(201,168,76,.1);border-radius:50%;animation:spin-slow 30s linear infinite}
 .hero-ornament:nth-child(1){width:500px;height:500px}
 .hero-ornament:nth-child(2){width:750px;height:750px;animation-direction:reverse;animation-duration:45s}
@@ -626,7 +626,7 @@ async function loadProfile(authUser) {
     var res = await sb.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
     if (res.error) {
       console.error("Profile lookup failed:", res.error);
-      showToast("Could not load your profile: " + res.error.message);
+      showToast("Something went wrong loading your account. Please try again.");
       currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0 };
       updateUserUI();
       return;
@@ -645,7 +645,7 @@ async function loadProfile(authUser) {
     var ins = await sb.from("profiles").insert({ id: authUser.id, full_name: fallbackName, email: authUser.email, points: 50 }).select().maybeSingle();
     if (ins.error) {
       console.error("Profile creation failed:", ins.error);
-      showToast("Signed in, but profile setup failed: " + ins.error.message);
+      showToast("Signed in successfully! Some features may take a moment to load.");
       currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0 };
       updateUserUI();
       return;
@@ -654,7 +654,7 @@ async function loadProfile(authUser) {
     updateUserUI();
   } catch (e) {
     console.error("loadProfile exception:", e);
-    showToast("Sign-in error: " + (e && e.message ? e.message : "unknown error"));
+    showToast("Sign-in failed. Please check your connection and try again.");
     currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0 };
     updateUserUI();
   }
@@ -710,7 +710,7 @@ async function doLogin() {
   hideErr("li-err"); showSpin("li-spin");
   var res = await sb.auth.signInWithPassword({ email: email, password: pass });
   hideSpin("li-spin");
-  if (res.error) { showErr("li-err", res.error.message); return; }
+  if (res.error) { showErr("li-err", friendlyAuthError(res.error.message)); return; }
   await loadProfile(res.data.user);
   closeAuth();
   document.getElementById("li-email").value = "";
@@ -727,7 +727,7 @@ async function doSignup() {
   if (pass.length < 8) { showErr("su-err", "Password must be at least 8 characters."); return; }
   hideErr("su-err"); showSpin("su-spin");
   var res = await sb.auth.signUp({ email: email, password: pass, options: { data: { full_name: name } } });
-  if (res.error) { hideSpin("su-spin"); showErr("su-err", res.error.message); return; }
+  if (res.error) { hideSpin("su-spin"); showErr("su-err", friendlyAuthError(res.error.message)); return; }
   if (!res.data.user) {
     hideSpin("su-spin");
     showErr("su-err", "Check your email to confirm your account, then sign in.");
@@ -736,7 +736,7 @@ async function doSignup() {
   var ins = await sb.from("profiles").insert({ id: res.data.user.id, full_name: name, email: email, points: 50 });
   hideSpin("su-spin");
   if (ins.error && ins.error.code !== "23505") {
-    showErr("su-err", "Account created but profile setup failed: " + ins.error.message);
+    showErr("su-err", "Account created! Please sign in.");
     return;
   }
   currentUser = { id: res.data.user.id, email: email, name: name, points: 50 };
@@ -780,6 +780,18 @@ function updateUserUI() {
   renderMenu(currentFilter);
 }
 
+function friendlyAuthError(msg) {
+  if (!msg) return "Something went wrong. Please try again.";
+  var m = msg.toLowerCase();
+  if (m.indexOf("invalid login") !== -1 || m.indexOf("invalid credentials") !== -1 || m.indexOf("wrong password") !== -1) return "Incorrect email or password. Please try again.";
+  if (m.indexOf("email not confirmed") !== -1) return "Please confirm your email before signing in.";
+  if (m.indexOf("user already registered") !== -1 || m.indexOf("already been registered") !== -1) return "An account with this email already exists. Please sign in instead.";
+  if (m.indexOf("password") !== -1 && m.indexOf("short") !== -1) return "Password must be at least 8 characters.";
+  if (m.indexOf("rate limit") !== -1 || m.indexOf("too many") !== -1) return "Too many attempts. Please wait a minute and try again.";
+  if (m.indexOf("network") !== -1 || m.indexOf("fetch") !== -1) return "Connection error. Please check your internet and try again.";
+  if (m.indexOf("email") !== -1 && m.indexOf("valid") !== -1) return "Please enter a valid email address.";
+  return "Something went wrong. Please try again.";
+}
 function showErr(id, msg) { var e = document.getElementById(id); e.textContent = msg; e.classList.add("show"); }
 function hideErr(id) { document.getElementById(id).classList.remove("show"); }
 function showSpin(id) { document.getElementById(id).classList.add("show"); }
@@ -972,7 +984,7 @@ async function createPendingOrder(channel) {
     var res = await sb.from("orders").insert(row).select().maybeSingle();
     if (res.error) {
       console.error("Order creation failed:", res.error);
-      showToast("Could not save your order record: " + res.error.message);
+      /* order record failed silently - order still goes via WhatsApp */
     } else if (res.data && res.data.order_code) {
       code = res.data.order_code;
     }
@@ -1007,15 +1019,31 @@ async function checkoutWA() {
   if (currentUser) { msg += "Customer: " + currentUser.name + "\n"; }
   msg += "Please confirm this order. Points are awarded at pickup.";
 
-  window.open("https://wa.me/201208622358?text=" + encodeURIComponent(msg), "_blank");
+  var waUrl = "https://wa.me/201208622358?text=" + encodeURIComponent(msg);
+
+  // On mobile, window.open can be blocked. Use a link click instead which works on all browsers.
+  var link = document.createElement("a");
+  link.href = waUrl;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Show order code modal THEN clear the cart - don't clear before user sees the code.
   showOrderCodeModal(order.code, order.totalPts);
   cart = []; saveCart(); updateCartUI(); closeCart();
 }
 
 function checkoutTalabat() {
   if (!cart.length) { showToast("Your cart is empty"); return; }
-  if (!confirm("Talabat does not support adding items from other websites directly to its cart. You will be taken to the Era page on Talabat to re-select your items and complete checkout there. Continue?")) { return; }
-  window.open("https://www.talabat.com/egypt/restaurant/792374/era-indian-restaurant", "_blank");
+  var link = document.createElement("a");
+  link.href = "https://www.talabat.com/egypt/restaurant/792374/era-indian-restaurant";
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function goTo(id) {

@@ -1007,7 +1007,7 @@ async function checkoutWA() {
   if (currentUser) { msg += "Customer: " + currentUser.name + "\n"; }
   msg += "Please confirm this order. Points are awarded at pickup.";
 
-  window.open("https://wa.me/201000000000?text=" + encodeURIComponent(msg), "_blank");
+  window.open("https://wa.me/201208622358?text=" + encodeURIComponent(msg), "_blank");
   showOrderCodeModal(order.code, order.totalPts);
   cart = []; saveCart(); updateCartUI(); closeCart();
 }

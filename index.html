@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Era - The Real Taste of India</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--maroon:#4A0E0E;--maroon-dark:#2D0808;--maroon-mid:#7B1C1C;--gold:#C9A84C;--gold-light:#E8C97A;--gold-pale:#F5E6C0;--cream:#FDF6E9;--warm-white:#FEFAF3;--text-dark:#1A0A0A;--text-mid:#4A2020;--text-muted:#7A5050;--shadow:rgba(74,14,14,.18);--tr:.3s cubic-bezier(.4,0,.2,1)}
+[data-theme="dark"]{--cream:#130808;--warm-white:#1A0D0D;--text-dark:#F5E6C0;--text-mid:#E8C97A;--text-muted:#C9A84C;--shadow:rgba(0,0,0,.5)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text-dark);overflow-x:hidden;transition:background var(--tr),color var(--tr)}
+
+#nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--maroon-dark);border-bottom:2px solid var(--gold);transition:all var(--tr)}
+#nav.scrolled{box-shadow:0 4px 30px rgba(0,0,0,.5)}
+.nav-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 2rem;height:82px;transition:height var(--tr)}
+.nav-left{display:flex;align-items:center;gap:2.5rem}
+.nav-right{display:flex;align-items:center;gap:1.4rem;justify-content:flex-end}
+.nav-link{color:var(--gold-light);text-decoration:none;font-size:.78rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;position:relative;transition:color var(--tr)}
+.nav-link::after{content:'';position:absolute;bottom:-4px;left:0;right:100%;height:1px;background:var(--gold);transition:right var(--tr)}
+.nav-link:hover{color:var(--gold)}
+.nav-link:hover::after{right:0}
+.nav-logo-wrap{display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.nav-logo-circle{width:88px;height:88px;border-radius:50%;border:3px solid var(--gold);overflow:hidden;background:var(--maroon-dark);box-shadow:0 0 0 4px var(--maroon-dark),0 0 0 6px var(--gold);margin-top:12px;transition:transform var(--tr),width var(--tr),height var(--tr),margin-top var(--tr)}
+.nav-logo-circle:hover{transform:scale(1.06)}
+.nav-logo-circle img{width:100%;height:100%;object-fit:cover;display:block}
+.nav-logo-tab{background:var(--maroon-dark);border:1.5px solid var(--gold);border-top:none;padding:2px 16px;font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.22em;color:var(--gold);border-radius:0 0 8px 8px;margin-top:-1px}
+#nav.scrolled .nav-logo-circle{width:58px;height:58px;margin-top:0}
+#nav.scrolled .nav-inner{height:66px}
+.btn-nav{background:var(--gold);color:var(--maroon-dark);border:none;padding:.5rem 1.3rem;border-radius:50px;font-size:.73rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all var(--tr);white-space:nowrap}
+.account-wrap{position:relative}
+.account-pill{background:rgba(201,168,76,.1);border:1.5px solid var(--gold);color:var(--gold-light);padding:.45rem 1.1rem .45rem .55rem;border-radius:50px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all var(--tr);white-space:nowrap;display:none;align-items:center;gap:.5rem}
+.account-pill.show{display:flex}
+.account-avatar{width:26px;height:26px;border-radius:50%;background:var(--gold);color:var(--maroon-dark);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:.78rem;flex-shrink:0}
+.account-pill:hover{background:rgba(201,168,76,.18);border-color:var(--gold-light)}
+.account-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:var(--warm-white);border:1.5px solid var(--gold);border-radius:14px;min-width:220px;box-shadow:0 12px 36px rgba(0,0,0,.25);opacity:0;pointer-events:none;transform:translateY(-8px);transition:all var(--tr);z-index:100;overflow:hidden}
+.account-dropdown.open{opacity:1;pointer-events:all;transform:translateY(0)}
+.acc-dd-header{padding:1rem 1.1rem;background:linear-gradient(135deg,var(--maroon-dark),#3D0A0A);border-bottom:1px solid rgba(201,168,76,.2)}
+.acc-dd-name{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold-light);font-weight:600}
+.acc-dd-email{font-size:.72rem;color:rgba(245,230,192,.55);margin-top:2px;word-break:break-all}
+.acc-dd-pts{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.1rem;border-bottom:1px solid rgba(201,168,76,.12)}
+.acc-dd-pts-label{font-size:.74rem;color:var(--text-muted)}
+.acc-dd-pts-val{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold);font-weight:600}
+.acc-dd-item{display:block;width:100%;text-align:left;background:none;border:none;padding:.7rem 1.1rem;font-size:.82rem;color:var(--text-dark);cursor:pointer;transition:background var(--tr)}
+.acc-dd-item:hover{background:rgba(201,168,76,.08)}
+.acc-dd-item.danger{color:#c0392b}
+.welcome-banner{max-width:1200px;margin:0 auto 1.5rem;padding:0 2rem;display:none}
+.welcome-banner.show{display:block}
+.welcome-banner-inner{background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(201,168,76,.04));border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+.welcome-text{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--text-dark)}
+.welcome-text em{font-style:italic;color:var(--gold)}
+.session-loading{position:fixed;top:0;left:0;right:0;height:3px;background:var(--gold);z-index:10000;transform:scaleX(0);transform-origin:left;transition:transform .4s ease}
+.session-loading.active{animation:loadbar 1.2s ease-in-out infinite}
+@keyframes loadbar{0%{transform:scaleX(0);opacity:1}50%{transform:scaleX(.6)}100%{transform:scaleX(1);opacity:0}}
+.btn-nav:hover{background:var(--gold-light);transform:translateY(-2px)}
+.cart-btn{position:relative;cursor:pointer;width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(201,168,76,.4);border-radius:50%;transition:all var(--tr)}
+.cart-btn:hover{border-color:var(--gold);background:rgba(201,168,76,.08)}
+.cart-btn svg{color:var(--gold-light);transition:color var(--tr)}
+.cart-btn:hover svg{color:var(--gold)}
+.cart-count{position:absolute;top:-6px;right:-6px;background:var(--gold);color:var(--maroon-dark);width:18px;height:18px;border-radius:50%;font-size:.62rem;font-weight:700;display:none;align-items:center;justify-content:center}
+.cart-count.show{display:flex}
+.theme-toggle{background:none;border:1.5px solid rgba(201,168,76,.5);border-radius:50px;width:46px;height:24px;cursor:pointer;position:relative;flex-shrink:0;transition:border-color var(--tr)}
+.theme-toggle-wrap{display:flex;align-items:center;gap:.4rem}
+.theme-toggle-icon{font-size:.85rem;color:rgba(201,168,76,.5);transition:color var(--tr),opacity var(--tr);user-select:none}
+[data-theme="light"] #theme-icon-sun{color:var(--gold);opacity:1}
+[data-theme="light"] #theme-icon-moon{opacity:.4}
+[data-theme="dark"] #theme-icon-moon{color:var(--gold);opacity:1}
+[data-theme="dark"] #theme-icon-sun{opacity:.4}
+.theme-toggle:hover{border-color:var(--gold)}
+.toggle-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--gold);transition:left var(--tr)}
+[data-theme="dark"] .toggle-knob{left:25px}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--gold-light);border-radius:2px}
+
+#hero{min-height:100vh;background:radial-gradient(ellipse at 20% 50%,rgba(123,28,28,.35) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(74,14,14,.4) 0%,transparent 60%),linear-gradient(160deg,#2D0808 0%,#4A0E0E 40%,#1A0505 100%);display:flex;align-items:center;justify-content:center;padding:120px 2rem 4rem;text-align:center;position:relative;overflow:hidden}
+.hero-ornament{position:absolute;border:1px solid rgba(201,168,76,.1);border-radius:50%;animation:spin-slow 30s linear infinite}
+.hero-ornament:nth-child(1){width:500px;height:500px}
+.hero-ornament:nth-child(2){width:750px;height:750px;animation-direction:reverse;animation-duration:45s}
+.hero-ornament:nth-child(3){width:1000px;height:1000px;animation-duration:60s}
+@keyframes spin-slow{to{transform:rotate(360deg)}}
+.hero-content{position:relative;z-index:1;max-width:700px}
+.hero-eyebrow{font-family:'Cinzel',serif;font-size:.75rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .3s forwards}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(3rem,8vw,6rem);font-weight:700;color:#FEFAF3;line-height:1.05;margin-bottom:1rem;opacity:0;animation:fadeUp .8s .5s forwards}
+.hero-title em{font-style:italic;color:var(--gold)}
+.hero-motto{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(1rem,2.5vw,1.4rem);color:var(--gold-light);letter-spacing:.05em;margin-bottom:3rem;opacity:0;animation:fadeUp .8s .7s forwards}
+.hero-ctas{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .8s .9s forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--maroon-dark);border:none;padding:1rem 2.5rem;border-radius:50px;font-size:.9rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all var(--tr);box-shadow:0 4px 20px rgba(201,168,76,.3)}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(201,168,76,.5)}
+.btn-ghost{background:transparent;color:var(--gold-light);border:1.5px solid var(--gold);padding:1rem 2.5rem;border-radius:50px;font-size:.9rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all var(--tr)}
+.btn-ghost:hover{background:rgba(201,168,76,.1);transform:translateY(-3px)}
+
+#points-bar{background:linear-gradient(135deg,#1A0505,#2D0808);border-bottom:1.5px solid rgba(201,168,76,.3);padding:.65rem 2rem;display:none;align-items:center;justify-content:center;gap:2rem;flex-wrap:wrap}
+#points-bar.show{display:flex}
+.pts-pill{display:flex;align-items:center;gap:.75rem;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:50px;padding:.45rem 1.25rem}
+.pts-label{font-size:.7rem;color:rgba(245,230,192,.6);letter-spacing:.1em;text-transform:uppercase}
+.pts-number{font-family:'Cinzel',serif;font-size:1.5rem;font-weight:600;color:var(--gold);line-height:1}
+.pts-bar-hint{font-size:.78rem;color:rgba(245,230,192,.55)}
+.btn-pts-view{background:transparent;border:1px solid rgba(201,168,76,.4);color:var(--gold-light);padding:.38rem 1.1rem;border-radius:50px;font-size:.72rem;cursor:pointer;transition:all var(--tr);font-family:'Cinzel',serif;letter-spacing:.06em}
+.btn-pts-view:hover{border-color:var(--gold);color:var(--gold)}
+
+.about-strip{background:var(--maroon-dark);padding:5rem 2rem}
+.about-grid{max-width:960px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:3rem;text-align:center}
+.about-num{font-family:'Cinzel',serif;font-size:2.5rem;font-weight:600;color:var(--gold);display:block;margin-bottom:.25rem}
+.about-item h3{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--gold-light);margin-bottom:.4rem}
+.about-item p{color:rgba(245,230,192,.6);font-size:.88rem;line-height:1.6}
+
+.section{padding:6rem 2rem}
+.section-inner{max-width:1200px;margin:0 auto}
+.section-header{text-align:center;margin-bottom:4rem}
+.section-eyebrow{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:.75rem}
+.section-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3rem);font-weight:700;color:var(--text-dark);line-height:1.2}
+.section-title em{font-style:italic;color:var(--gold)}
+.gold-line{width:60px;height:2px;background:linear-gradient(to right,var(--gold),var(--gold-light));margin:1.5rem auto 0;border-radius:2px}
+
+.menu-tabs{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:3rem}
+.tab-btn{background:transparent;border:1.5px solid var(--gold);color:var(--text-mid);padding:.55rem 1.6rem;border-radius:50px;font-size:.8rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all var(--tr);font-family:'Cinzel',serif}
+.tab-btn.active,.tab-btn:hover{background:var(--gold);color:var(--maroon-dark);box-shadow:0 4px 15px rgba(201,168,76,.3)}
+
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.75rem}
+.dish-card{background:var(--warm-white);border-radius:18px;overflow:hidden;box-shadow:0 4px 20px var(--shadow);border:1px solid rgba(201,168,76,.15);transition:all var(--tr);display:flex;flex-direction:column}
+.dish-card:hover{transform:translateY(-8px);box-shadow:0 24px 50px var(--shadow);border-color:rgba(201,168,76,.5)}
+.dish-img-wrap{position:relative;height:190px;overflow:hidden;flex-shrink:0}
+.dish-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s cubic-bezier(.4,0,.2,1)}
+.dish-card:hover .dish-img-wrap img{transform:scale(1.08)}
+.dish-img-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(26,5,5,.65) 0%,transparent 55%)}
+.dish-popular-tag{position:absolute;top:12px;left:14px;background:var(--gold);color:var(--maroon-dark);font-size:.62rem;font-weight:700;letter-spacing:.12em;padding:4px 12px;border-radius:50px;text-transform:uppercase;font-family:'Cinzel',serif}
+.dish-cat-tag{position:absolute;top:12px;right:14px;background:rgba(26,5,5,.65);backdrop-filter:blur(6px);color:var(--gold-light);font-size:.62rem;font-weight:500;letter-spacing:.1em;padding:4px 10px;border-radius:50px;text-transform:uppercase;border:1px solid rgba(201,168,76,.3)}
+.dish-body{padding:1.25rem 1.3rem 1.2rem;flex:1;display:flex;flex-direction:column}
+.dish-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.45rem}
+.dish-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;color:var(--text-dark);line-height:1.3}
+.dish-price{font-family:'Cinzel',serif;font-size:.95rem;font-weight:600;color:var(--gold);white-space:nowrap}
+.dish-desc{font-size:.81rem;color:var(--text-muted);line-height:1.65;margin-bottom:1rem;flex:1}
+.dish-footer-row{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-top:auto}
+.dish-pts{font-size:.72rem;color:var(--gold);background:rgba(201,168,76,.1);padding:4px 12px;border-radius:50px;border:1px solid rgba(201,168,76,.25);font-family:'Cinzel',serif;letter-spacing:.04em;white-space:nowrap}
+.dish-actions{display:flex;gap:.5rem;align-items:center}
+.add-btn{background:var(--gold);color:var(--maroon-dark);border:none;width:36px;height:36px;border-radius:50%;font-size:1.25rem;font-weight:700;cursor:pointer;transition:all var(--tr);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.add-btn:hover{background:var(--gold-light);transform:scale(1.18)}
+.redeem-btn{background:transparent;color:var(--gold);border:1.5px solid var(--gold);padding:5px 12px;border-radius:50px;font-size:.7rem;font-weight:600;cursor:pointer;transition:all var(--tr);white-space:nowrap;font-family:'Cinzel',serif;letter-spacing:.04em}
+.redeem-btn:hover:not(:disabled){background:var(--gold);color:var(--maroon-dark)}
+.redeem-btn:disabled{opacity:.35;cursor:not-allowed;border-color:rgba(201,168,76,.3);color:rgba(201,168,76,.3)}
+
+#cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1999;opacity:0;pointer-events:none;transition:opacity var(--tr)}
+#cart-overlay.show{opacity:1;pointer-events:all}
+#cart-panel{position:fixed;top:0;right:-440px;bottom:0;width:420px;max-width:100vw;background:var(--warm-white);border-left:2px solid var(--gold);z-index:2000;transition:right var(--tr);display:flex;flex-direction:column}
+#cart-panel.open{right:0}
+.cart-hd{background:var(--maroon-dark);padding:1.4rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.cart-hd h2{font-family:'Playfair Display',serif;color:var(--gold-light);font-size:1.25rem}
+.close-btn{background:none;border:none;color:var(--gold);cursor:pointer;transition:transform var(--tr);display:flex}
+.close-btn:hover{transform:rotate(90deg)}
+.cart-body{flex:1;overflow-y:auto;padding:1.25rem}
+.cart-empty{text-align:center;padding:3rem 1rem;color:var(--text-muted)}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid rgba(201,168,76,.12);gap:.5rem}
+.cart-item-info h4{font-size:.88rem;font-weight:600;color:var(--text-dark)}
+.cart-item-info p{font-size:.78rem;color:var(--text-muted);margin-top:2px}
+.cart-qty{display:flex;align-items:center;gap:.4rem;flex-shrink:0}
+.qty-btn{background:rgba(201,168,76,.12);color:var(--text-dark);border:1px solid rgba(201,168,76,.25);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
+.qty-btn:hover{background:var(--gold);color:var(--maroon-dark);border-color:var(--gold)}
+.cart-qty span{font-size:.88rem;font-weight:600;min-width:18px;text-align:center}
+.cart-ft{padding:1.25rem 1.5rem;border-top:2px solid rgba(201,168,76,.2);background:var(--warm-white);flex-shrink:0}
+.cart-total-row{display:flex;justify-content:space-between;font-weight:700;font-size:1rem;margin-bottom:.3rem;color:var(--text-dark)}
+.cart-pts-line{font-size:.78rem;color:var(--gold);margin-bottom:1.25rem;font-family:'Cinzel',serif;letter-spacing:.04em}
+.checkout-btns{display:flex;flex-direction:column;gap:.7rem}
+.btn-wa{background:#25D366;color:#fff;border:none;padding:.85rem;border-radius:50px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all var(--tr);display:flex;align-items:center;justify-content:center;gap:.6rem}
+.btn-wa:hover{background:#128C7E;transform:translateY(-2px)}
+.btn-talabat{background:#FF6600;color:#fff;border:none;padding:.85rem;border-radius:50px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all var(--tr);display:flex;align-items:center;justify-content:center;gap:.6rem}
+.btn-talabat:hover{background:#e05500;transform:translateY(-2px)}
+.checkout-hint{font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:-.3rem;line-height:1.4}
+
+#auth-modal{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity var(--tr);padding:1rem}
+#auth-modal.open{opacity:1;pointer-events:all}
+.auth-box{background:var(--warm-white);border:2px solid var(--gold);border-radius:20px;padding:2.5rem;width:100%;max-width:440px;position:relative;transform:translateY(30px);transition:transform var(--tr)}
+#auth-modal.open .auth-box{transform:translateY(0)}
+.auth-box h2{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--text-dark);margin-bottom:.2rem}
+.auth-box>p{color:var(--text-muted);font-size:.84rem;margin-bottom:1.75rem}
+.auth-tabs{display:flex;border:1.5px solid var(--gold);border-radius:50px;overflow:hidden;margin-bottom:1.75rem}
+.auth-tab{flex:1;background:none;border:none;padding:.6rem;font-size:.85rem;font-weight:500;cursor:pointer;transition:all var(--tr);color:var(--text-muted)}
+.auth-tab.active{background:var(--gold);color:var(--maroon-dark);font-weight:700}
+.form-group{margin-bottom:1.1rem}
+.form-group label{display:block;font-size:.74rem;font-weight:600;color:var(--text-mid);margin-bottom:.35rem;letter-spacing:.08em;text-transform:uppercase}
+.form-group input{width:100%;padding:.72rem 1rem;border:1.5px solid rgba(201,168,76,.25);border-radius:8px;background:var(--cream);color:var(--text-dark);font-size:.9rem;transition:border-color var(--tr);outline:none;font-family:'Inter',sans-serif}
+.form-group input:focus{border-color:var(--gold)}
+.btn-auth{width:100%;padding:.9rem;background:var(--gold);color:var(--maroon-dark);border:none;border-radius:50px;font-size:.9rem;font-weight:700;cursor:pointer;transition:all var(--tr);margin-top:.5rem}
+.btn-auth:hover{background:var(--gold-light);transform:translateY(-2px)}
+.auth-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);line-height:1}
+.auth-err{color:#c0392b;font-size:.8rem;margin-top:.5rem;display:none;padding:.5rem .75rem;background:rgba(192,57,43,.08);border-radius:6px}
+.auth-err.show{display:block}
+.auth-spinner{text-align:center;padding:.5rem;color:var(--gold);font-size:.82rem;display:none}
+.auth-spinner.show{display:block}
+
+#pts-modal{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity var(--tr);padding:1rem}
+#pts-modal.open{opacity:1;pointer-events:all}
+.pts-box{background:var(--warm-white);border:2px solid var(--gold);border-radius:20px;padding:2rem;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;position:relative;transform:translateY(30px);transition:transform var(--tr)}
+#pts-modal.open .pts-box{transform:translateY(0)}
+.pts-box h2{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--text-dark);margin-bottom:.2rem}
+.pts-box>p{color:var(--text-muted);font-size:.82rem;margin-bottom:1.5rem}
+.pts-modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);line-height:1}
+.pts-counter-big{background:linear-gradient(135deg,#1A0505,#3D0A0A);border-radius:16px;padding:2rem;text-align:center;margin-bottom:1.5rem;border:1px solid rgba(201,168,76,.2)}
+.pts-counter-num{font-family:'Cinzel',serif;font-size:4rem;font-weight:600;color:var(--gold);display:block;line-height:1}
+.pts-counter-label{font-size:.78rem;color:rgba(245,230,192,.6);letter-spacing:.15em;text-transform:uppercase;margin-top:.5rem;display:block}
+.pts-progress-track{background:rgba(201,168,76,.1);border-radius:50px;height:8px;overflow:hidden;margin:1rem 0 .4rem}
+.pts-progress-fill{background:linear-gradient(to right,var(--gold),var(--gold-light));height:100%;border-radius:50px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.pts-progress-labels{display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-muted)}
+.pts-section-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:600;color:var(--text-dark);margin:1.5rem 0 1rem}
+.redeem-row{display:flex;align-items:center;gap:1rem;padding:.8rem 0;border-bottom:1px solid rgba(201,168,76,.1)}
+.redeem-row img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.redeem-row-info{flex:1;min-width:0}
+.redeem-row-name{font-size:.9rem;font-weight:600;color:var(--text-dark)}
+.redeem-row-pts{font-size:.74rem;color:var(--gold);font-family:'Cinzel',serif}
+.btn-redeem-sm{background:var(--gold);color:var(--maroon-dark);border:none;padding:.4rem 1rem;border-radius:50px;font-size:.72rem;font-weight:700;cursor:pointer;transition:all var(--tr);white-space:nowrap;flex-shrink:0}
+#order-code-modal{position:fixed;inset:0;z-index:3500;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity var(--tr);padding:1rem}
+#order-code-modal.open{opacity:1;pointer-events:all}
+.order-code-box{background:var(--warm-white);border:2px solid var(--gold);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:420px;text-align:center;position:relative;transform:translateY(30px);transition:transform var(--tr)}
+#order-code-modal.open .order-code-box{transform:translateY(0)}
+.order-code-icon{width:56px;height:56px;border-radius:50%;background:var(--green,#2D6A4F);color:#fff;font-size:1.6rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.order-code-box h2{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--text-dark);margin-bottom:.3rem}
+.order-code-box>p{color:var(--text-muted);font-size:.85rem;margin-bottom:1.5rem}
+.order-code-display{font-family:'Cinzel',serif;font-size:2.4rem;font-weight:600;letter-spacing:.08em;color:var(--maroon-dark);background:rgba(201,168,76,.12);border:2px dashed var(--gold);border-radius:12px;padding:1rem;margin-bottom:1rem}
+.order-code-hint{font-size:.8rem;color:var(--gold);margin-bottom:1.5rem !important}
+.btn-redeem-sm:hover{background:var(--gold-light)}
+.redeem-empty-msg{color:var(--text-muted);font-size:.85rem;padding:.5rem 0}
+
+#cfg-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:1rem}
+#cfg-modal.show{display:flex}
+.cfg-box{background:var(--warm-white);border:2px solid var(--gold);border-radius:20px;padding:2.5rem;width:100%;max-width:500px}
+.cfg-box h2{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--text-dark);margin-bottom:.4rem}
+.cfg-box p{color:var(--text-muted);font-size:.85rem;line-height:1.65;margin-bottom:1.25rem}
+.cfg-steps{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.82rem;color:var(--text-mid);line-height:2}
+.cfg-steps code{background:rgba(201,168,76,.15);padding:1px 6px;border-radius:4px;font-size:.8rem}
+.cfg-skip{background:none;border:none;color:var(--gold);font-size:.8rem;cursor:pointer;margin-top:.75rem;display:block;text-align:center;width:100%;text-decoration:underline;opacity:.7}
+.cfg-skip:hover{opacity:1}
+
+.location-section{background:var(--maroon-dark);padding:5rem 2rem}
+.location-inner{max-width:960px;margin:0 auto;display:grid;grid-template-columns:1fr 1.5fr;gap:3rem;align-items:center}
+.location-info h2{font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold-light);margin-bottom:1rem}
+.location-detail{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:1rem}
+.location-detail span{color:rgba(245,230,192,.78);font-size:.88rem;line-height:1.6}
+.map-wrap{border-radius:16px;overflow:hidden;border:2px solid var(--gold)}
+.map-wrap iframe{display:block;width:100%;height:340px}
+
+footer{background:#0D0404;padding:3rem 2rem 2rem;text-align:center;border-top:2px solid var(--gold)}
+.footer-logo{width:68px;height:68px;border-radius:50%;overflow:hidden;margin:0 auto 1.25rem;border:2px solid var(--gold)}
+.footer-logo img{width:100%}
+footer p{color:rgba(245,230,192,.45);font-size:.8rem;line-height:1.9}
+.footer-name{font-family:'Cinzel',serif;font-size:1rem;letter-spacing:.22em;color:var(--gold)}
+
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--maroon-dark);border:1.5px solid var(--gold);color:var(--gold-light);padding:.7rem 1.8rem;border-radius:50px;font-size:.84rem;z-index:9999;transition:transform var(--tr);white-space:nowrap;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+.mob-nav{position:fixed;inset:0;background:var(--maroon-dark);z-index:1500;transform:translateX(-100%);transition:transform var(--tr);display:flex;flex-direction:column;padding:2rem;overflow-y:auto}
+.mob-nav.open{transform:translateX(0)}
+.mob-logo{width:80px;height:80px;border-radius:50%;border:2px solid var(--gold);overflow:hidden;margin-bottom:2rem}
+.mob-logo img{width:100%}
+.mob-link{color:var(--gold-light);text-decoration:none;font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:600;padding:.7rem 0;border-bottom:1px solid rgba(201,168,76,.12);cursor:pointer;transition:color var(--tr);display:block}
+.mob-link:hover{color:var(--gold)}
+.mob-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;color:var(--gold);cursor:pointer;display:flex}
+
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .7s,transform .7s}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.divider{height:50px;background:linear-gradient(to bottom,#2D0808,var(--cream))}
+
+@media(max-width:900px){.about-grid{grid-template-columns:1fr;gap:2rem}.location-inner{grid-template-columns:1fr}}
+@media(max-width:768px){.nav-left{display:none}.hamburger{display:flex}.btn-nav{display:none}.nav-inner{grid-template-columns:auto 1fr auto;padding:0 1rem}.nav-logo-wrap{justify-self:center}#cart-panel{width:100%;right:-100%}.pts-bar-hint{display:none}.menu-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.hero-ctas{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body data-theme="light">
+
+<div class="session-loading" id="session-loading"></div>
+
+<div id="cfg-modal">
+  <div class="cfg-box">
+    <h2>Connect Your Database</h2>
+    <p>Enter your free <strong>Supabase</strong> credentials to enable secure accounts and loyalty points. <a href="https://supabase.com" target="_blank" style="color:var(--gold)">supabase.com</a></p>
+    <div class="cfg-steps">
+      1. Create a free project at <strong>supabase.com</strong><br>
+      2. Go to <strong>Project Settings &rarr; API</strong><br>
+      3. Copy your <code>Project URL</code> and <code>anon public key</code>
+    </div>
+    <div class="form-group"><label>Project URL</label><input type="text" id="cfg-url" placeholder="https://xxxx.supabase.co" autocomplete="off"></div>
+    <div class="form-group"><label>Anon Public Key</label><input type="text" id="cfg-key" placeholder="eyJhbGciOiJIUzI1NiIs..." autocomplete="off"></div>
+    <div class="auth-err" id="cfg-err"></div>
+    <button class="btn-auth" onclick="saveConfig()">Connect Database</button>
+    <button class="cfg-skip" onclick="skipConfig()">Skip for now (local mode)</button>
+  </div>
+</div>
+
+<div id="points-bar">
+  <div class="pts-pill">
+    <div>
+      <div class="pts-label">Loyalty Points</div>
+      <div class="pts-number" id="pts-num">0</div>
+    </div>
+  </div>
+  <span class="pts-bar-hint">Earn points on every order and redeem for free dishes</span>
+  <button class="btn-pts-view" onclick="openPtsModal()">View Balance</button>
+</div>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <a class="nav-link" onclick="goTo('menu')">Menu</a>
+      <a class="nav-link" onclick="goTo('location')">Find Us</a>
+    </div>
+    <div class="nav-logo-wrap" onclick="goTo('hero')">
+      <div class="nav-logo-circle"><img src="data:image/webp;base64,UklGRiAPAABXRUJQVlA4WAoAAAAoAAAAswAAswAASUNDUMgBAAAAAAHIbGNtcwIQAABtbnRyUkdCIFhZWiAH4gADABQACQAOAB1hY3NwTVNGVAAAAABzYXdzY3RybAAAAAAAAAAAAAAAAAAA9tYAAQAAAADTLWhhbmSdkQA9QICwPUB0LIGepSKOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAAF9jcHJ0AAABDAAAAAx3dHB0AAABGAAAABRyWFlaAAABLAAAABRnWFlaAAABQAAAABRiWFlaAAABVAAAABRyVFJDAAABaAAAAGBnVFJDAAABaAAAAGBiVFJDAAABaAAAAGBkZXNjAAAAAAAAAAV1UkdCAAAAAAAAAAAAAAAAdGV4dAAAAABDQzAAWFlaIAAAAAAAAPNUAAEAAAABFslYWVogAAAAAAAAb6AAADjyAAADj1hZWiAAAAAAAABilgAAt4kAABjaWFlaIAAAAAAAACSgAAAPhQAAtsRjdXJ2AAAAAAAAACoAAAB8APgBnAJ1A4MEyQZOCBIKGAxiDvQRzxT2GGocLiBDJKwpai5+M+s5sz/WRldNNlR2XBdkHWyGdVZ+jYgskjacq6eMstu+mcrH12Xkd/H5//9WUDggiAwAANA5AJ0BKrQAtAA+kUKcSaWjoqEkskyYsBIJY27dXFstUpBlnXrn/AuQNBzNwB5lfN604veoshC8m/4bts/0f9c5uWZVcb/LfxFjm5HfDTUC/If55uyuveYF3g8/z5PzM8QDgTKAHihZ/PrL2GOlH6OhyIAzFp467//fVBRxG6h50sqi+OJSwbHwpch1ptyFC/95fd3Wl1pRsui/xhhXDZt6TZZtpphu27acl3oHDn+3osAXvuhE1HxudHeQPxMP4MxChg96m5o1H9UgDJocQvqp/xwGs3ilcTxoImzRZNHKxeU88XU4VaFywuBq9H/aGfYk6G1VjaFbXVFYYjtFIS9/bqkGuyY8mPJpkGuCalTaDxFpNcdX/B/nih9vWLvEDAv4w0wIyQguRnj7Ih3ue2Wkr+/wP+gAh8JAVtqk8v7hkQn6Ewm1rg1xCeuH5stFQG6WF2yjlu0AnyJsLIr13V4OGXB8aoEP7E30NaHyA778GCN9TWvGEYs9E0eMm6/o6x2fYgOovp/FRO/WysXZBKtwpR6YB2aX3xaL91VlnGu/kQj7lbe8icfbL+A0f2Hon81TJYLDCx00EDVASpJleX3208ppU6/gBLaLXpElxt9OIkMAKS3fAAD++yGFh1qj9WPA0nKjof3LmLqb82rfVmB6WIsOiyaSK7oTzv1S8oby+cCwQAfoi+vTmmljeJ8iYPyC3A9Dhaum5aehtRFvKU8WH6i/OL1Edz8WA/y9028l85OKwB8VJ/MzXAQ2sx4Qkl3xKem6hFlG9/RRVfkejMrzz9YmD0QLNs2bC7jlDHR42rr+zDw4SP+s4Tay8YcHb25+85p7vjm188cifltUsisgQMTjp4XcoSjcjMcLUIRPJ/Q/+d+9BFXXRDokQbJe4hky2Jj0+VIh0+z65Xt1X7nyY737WoJQolqENoOlK5Yvjd8ARA0WsMx9THoMAaG1VGkzgrS+2dMOngQiMiglYzCfRw+6wAGlBMzqOsm8numtybwgPnx+8wAsa7+a7HJgt2W44uqxWp2zY3xT6nityQgEHyhSZfjNuNwL2CnSidrc/UBZoqNJwdoePgEr28ZU50Rd1o2YQYy7loZOmE/gkqd0Im3a7k+hq/usGqjhplLuWMJxW1kqZqsFqilJ3d7e6PvY0rInd9jy2qXHxMBqBtXfTAK0a0hjzPDTLxZsQ8rSUpvySojFIa/hRrt1DGHzib9XvDb98lSHOOcKkAB+8hEPn1kOLK/OuDr5MsaKLKxMwh1pqW+Sxa86h0e6OH3WAG3jqKif2l1Zluhjv9tCxxK6AbnWJ3pJOeDwjV/LrWPuofyJ17hr28rb02O+FjtVBadUl9rRsqqkPCA2XVaHINIxb1MHncJWMT9YrmqwBwnuVbfaaMoEwEB3/5BjYEalp/vG1fVXwo1lm2jl2pdNyZbgrxQhWhIJQKgeQrjYFYLlfyQ1PlBkSpaNORUDMPAqMLkoKNvH3jmNkEGzecfVa8Og2Cuuc/eNTMiQJbwGoMMkGMYzcoEySHLqrWeq9oZR8xVR52pau4U0Ety5z3jp37BKjszp1aXD4aW35mUGqrUcYJfAgG6Jds2D2Jz/j1X1ylUtV6zyEAJiryI+IEQ6ecbPEeg2HcUto4/gU4SXRl/e11uBNGEzCyJVXkYqDQA3ntkacOHWHVph3XiXrENHrNLn6fzzr59gkjvTU77ZdnOdJ5bhf/l5+uEL4OiH833wHHKnKO6J2zuGIpQmPs0QGU1Ejn5j477Tr9lkaBIm2nItSp0D8hYD5kiddYF+yy6CZTpcxq/37ZCpE2YDtRkjHzydltlHYFXfdhAa2QwtYE6vaBnW7IW8YimlTEfInOYlm/nL0NLwrOidvHpEKxTDpOJ5rexx7s2mpCqdPzUsidSUc0IPQOdGXjmi8/QtGLy8xC21plYMwOO/7TfyGZBHGPjqJw/RzgdvdTg4x9Z22U+mmyc/tH2Bstekl69JBbas3J4Ru0LBG7nyXs+86lBypwXGIjID/F7ICh9J/UcT/vV5HUx8a7zJHkaAlmSgNLyo4E/eHs9/7/yJ6uhKTDrIXnlimB3UX/cHUGSgPrxYdEfJBDwwDWhqvkedGnJmuscgasGM3rCxp64ZRnUSgXhCYD1CVaQqlA4bM4cxn81Prry4mE8RIatVgEWKvt2yF2prkNRHgO5G4I6Hx3FzTkQbobcIGYQHy62exxyrLnfpkmpfjnguB+gcyv8w0uvm1S7lk0OalQkTkg+WHmzD1D5vzZQHzWJfj7oHO7oE/RG70xnqA3sCHQts6WML/hek4vXOlV7EbeU4fJuH4nAjckMjn/rQI+DK6aelUNA+S5/cHWmnQBp3N8/stn4p6X1CdvPmfaNAV7V8R7BRoBgZ7Wy8IiumzlqTJeK8RCcDxBv9scXXZu1OW2h5FvBRPQr11OdL8a8uIw8mF8EGwqGnVhZsHNjys/sfmp2wXvscxCZZjF2jHkejoNZn09IVP546h/GPMkzN9kCBgqxpZr3r3kTJUiAOgiAgFVchGt6OxOg+pZkAoUEH2cfrDRfHtlVNcs7yZsg/taZRzKBvChMuhviE8dOgAZfe2DC5fvnPBaBGNTXw4X0jWAzX57iPslSaPfm+zTU5Jv9v2lmOvHME3JnjN2WRfzPu/IeUdcYiCdf2XS4KvYSzMxjQ7PG0LGI0DhnVPQG7NLraIwHO8OvvOM1LdPWDVrbtVSsEuYRpUaob+z9Z4sVbcZDdEV3wogCIhcLR0dehfsoYv5htXxLtvkUjDzLXZLLrHBnRpH97qP7IwhmMWQSbwDZKXNqY8uk/ERa04ukpsbVWKTPyRUOhL7Sh++B7T2X4UgYyYb8xAKvHl0csWCK7VKozuioX6lgrVN63o4m7B+7WI2jjQYI88PRP6XQlV25EGzzStc84Cc/HzkZbyQOr7obAzZ2aebq8xS5Q63Tk2EXiwCj9EynsAn4KT9vOvUIm37dKVmtwT7EDW1r+LPUdfr7YmhL85ciDKp4liPQ7w6u+czJ6jXZx2n+2G9GareIRa2wwHPwOzBUI9ncFxfNEg2KDM6tbk2LSjyyqNYtal1xvOb7P4FReiu0b7A5g8u1ehz5kgIwAv6UhW3OZZr6z34yER3zrxR2lKU9RkITPYna7dcd5DikXvYon/VW8tLcVW9IQYXh7nDPHzJthgXa/WrN8T6z6gl6IG8prTDh/puMAzxeXzc0SZoiGBqS5J/Sn0khnmUOIrlW/75PKJbQdyhalpcx2SdxbmWEc5w1ewUr/dBBZP01fd39zc50TVxWxZUdVYVy/Mc4byjhYhkk3/qlFIJYzsgho4CINUylEjwg5QUh38WcgpkAS3ga8gxgWGtjLTJnJxYZS45Dx2An+PEuskYW3lIu/8sRyf1wTetzYWUH3MWCrAvEa3ok+BGLkXhFjvb2QOSVHYNT7z031ac1wvX2jwt93HnvAL59K8ynXbtR7Lb/vdWoWRcb91ppbkDMHK1HWuDtvvOT8v6ht5wBSRYG2jqw+n8GE9kkIV29JU/IBsPVaLCMIscqMQf16COi39Jif3eOD/JN4Z7nqCO2J+zQzGOrCUHQyf6fyN1FY0yFFbjD51+hVwM8CClAh7tGjk+G4dDgcnlyJ2SVdHRjljviqD5YL+eoVwuwIYRRaFfMH3cVaM32pFNsIBI75mdoFO8ruQDWKe0byjGzpu0C3Op66PRsll1Q3gFKVWXzHNXqRQQ3uTppV6xC8DfVzq0bS8ahLmor37DaBS9NlDcNiwDcav4PTUMNGOv/eDbj1NTMd/bNL5uk4660+rPyCWYyAjisFtQk+LPmdjMnn789bbOwt+BErANvOZRfQMr6WAsodhBamS3rlj6qKzQ+fJaoVWct27J+AWZMs1JdV+SELGoy9TapWlcEjNJinfxeXyt6uE83oSwwVLZV/ZD5qa3sbDtWGldluCEcIVsozW8AF6p9tNTrGvz7d+ni9+hG2jVDDfFoyPiS9TBA1eVS9jsR6gmQTY0/ltHZbkbfbiNp/0QqPO/sbNNGUYwHB5jbCq2KVOEIbYWaPU2vlxFoj2oxDfa2SPJbH6vMrfFK2YapaJCMinc1ZeNfksccHpw8m58XfmXipArEpygvcdxkdS7oHNQSPQOQWV9yzO1dHa6lMLpKJrKgANNIVyuUgaqpqgmpqi1UEo9oAj6Ga1rd4IRbrj8rNeQE4ret2j3s5G+9qZERYUYfp8B0Z4pHSXg+fp9FdI7NvDfWVgOp/M49YXvZCoQ6digHMn7THfHuq9QAAAABFWElGogAAAEV4aWYAAE1NACoAAAAIAAUBEgADAAAAAQABAAABGgAFAAAAAQAAAEoBGwAFAAAAAQAAAFIBKAADAAAAAQACAACHaQAEAAAAAQAAAFoAAAAAAC3GwAAAJxAALcbAAAAnEAAFkAAABwAAAAQwMjEwoAAABwAAAAQwMTAwoAEAAwAAAAH//wAAoAIABAAAAAEAAAC0oAMABAAAAAEAAAC0AAAAAA==" alt="Era Restaurant Logo"></div>
+      <span class="nav-logo-tab">ERA</span>
+    </div>
+    <div class="nav-right">
+      <div class="theme-toggle-wrap">
+        <span class="theme-toggle-icon" id="theme-icon-sun">&#9728;</span>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Switch between light and dark mode" title="Switch between light and dark mode"><span class="toggle-knob"></span></button>
+        <span class="theme-toggle-icon" id="theme-icon-moon">&#9789;</span>
+      </div>
+      <div class="cart-btn" onclick="openCart()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span class="cart-count" id="cart-count">0</span>
+      </div>
+      <button class="btn-nav" id="auth-btn" onclick="handleAuth()">Sign In</button>
+      <div class="account-wrap" id="account-wrap">
+        <button class="account-pill" id="account-pill" onclick="toggleAccountDropdown(event)">
+          <span class="account-avatar" id="account-avatar">E</span>
+          <span id="account-firstname">Account</span>
+        </button>
+        <div class="account-dropdown" id="account-dropdown">
+          <div class="acc-dd-header">
+            <div class="acc-dd-name" id="dd-name">Guest</div>
+            <div class="acc-dd-email" id="dd-email"></div>
+          </div>
+          <div class="acc-dd-pts">
+            <span class="acc-dd-pts-label">Loyalty Points</span>
+            <span class="acc-dd-pts-val" id="dd-points">0</span>
+          </div>
+          <button class="acc-dd-item" onclick="openPtsModal();closeAccountDropdown()">View &amp; Redeem Points</button>
+          <button class="acc-dd-item" onclick="openCart();closeAccountDropdown()">My Cart</button>
+          <button class="acc-dd-item danger" onclick="doLogout();closeAccountDropdown()">Sign Out</button>
+        </div>
+      </div>
+      <div class="hamburger" onclick="toggleMob()"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</nav>
+
+<div class="mob-nav" id="mob-nav">
+  <button class="mob-close" onclick="toggleMob()">
+    <svg width="28" height="28" fill="none" stroke="#C9A84C" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="mob-logo"><img src="data:image/webp;base64,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" alt="Era"></div>
+  <a class="mob-link" onclick="goTo('hero');toggleMob()">Home</a>
+  <a class="mob-link" onclick="goTo('menu');toggleMob()">Menu</a>
+  <a class="mob-link" onclick="openCart();toggleMob()">Cart</a>
+  <a class="mob-link" onclick="openPtsModal();toggleMob()">Loyalty Points</a>
+  <a class="mob-link" onclick="goTo('location');toggleMob()">Find Us</a>
+  <a class="mob-link" id="mob-account-link" onclick="handleAuth();toggleMob()">Account</a>
+  <div style="margin-top:auto;padding-top:2rem;display:flex;align-items:center;justify-content:space-between">
+    <span style="color:var(--gold-light);font-size:.85rem;font-family:'Cinzel',serif;letter-spacing:.05em" id="mob-theme-label">Light Mode</span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Switch between light and dark mode"><span class="toggle-knob"></span></button>
+  </div>
+</div>
+
+<section id="hero">
+  <div class="hero-ornament"></div><div class="hero-ornament"></div><div class="hero-ornament"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Welcome to</p>
+    <h1 class="hero-title"><em>Era</em></h1>
+    <p class="hero-motto">the real taste of india</p>
+    <div class="hero-ctas">
+      <button class="btn-primary" onclick="goTo('menu')">Explore Our Menu</button>
+      <button class="btn-ghost" onclick="goTo('location')">Find Us</button>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<div class="about-strip">
+  <div class="about-grid">
+    <div class="about-item reveal"><span class="about-num">50+</span><h3>Authentic Dishes</h3><p>Recipes passed through generations, crafted with the finest Indian spices</p></div>
+    <div class="about-item reveal"><span class="about-num">4.9</span><h3>Guest Rating</h3><p>Loved by thousands who return for our unforgettable flavors</p></div>
+    <div class="about-item reveal"><span class="about-num">15+</span><h3>Years of Tradition</h3><p>Serving Cairo with the warmth and soul of authentic Indian cuisine</p></div>
+  </div>
+</div>
+
+<section class="section" id="menu">
+  <div class="welcome-banner" id="welcome-banner">
+    <div class="welcome-banner-inner">
+      <span class="welcome-text">Hello, <em id="welcome-name">there</em>! Ready for some <em>real Indian flavor</em> today?</span>
+      <span class="pts-bar-hint" id="welcome-pts-hint">You have <strong id="welcome-pts-val">0</strong> points to redeem</span>
+    </div>
+  </div>
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <span class="section-eyebrow">Our Offerings</span>
+      <h2 class="section-title">The <em>Menu</em></h2>
+      <div class="gold-line"></div>
+    </div>
+    <div class="menu-tabs reveal">
+      <button class="tab-btn active" onclick="filterMenu('all',this)">All</button>
+      <button class="tab-btn" onclick="filterMenu('veg',this)">Veg</button>
+      <button class="tab-btn" onclick="filterMenu('popular',this)">Popular</button>
+      <button class="tab-btn" onclick="filterMenu('mains',this)">Mains</button>
+      <button class="tab-btn" onclick="filterMenu('desserts',this)">Desserts</button>
+    </div>
+    <div class="menu-grid" id="menu-grid"></div>
+  </div>
+</section>
+
+<section class="location-section" id="location">
+  <div class="location-inner">
+    <div class="location-info reveal">
+      <h2>Find <em style="font-style:italic;color:var(--gold)">Us</em></h2>
+      <div class="gold-line" style="margin:1rem 0 1.5rem"></div>
+      <div class="location-detail">
+        <svg width="20" height="20" fill="none" stroke="#C9A84C" stroke-width="2" viewBox="0 0 24 24"><path d="M12 21s-8-7.5-8-12a8 8 0 1116 0c0 4.5-8 12-8 12z"/><circle cx="12" cy="9" r="3"/></svg>
+        <span>Abd al Aziz soud, Al Manyal Al Gharbi<br>Old Cairo, Cairo Governorate 11555</span>
+      </div>
+      <div class="location-detail">
+        <svg width="20" height="20" fill="none" stroke="#C9A84C" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span>Open Daily: 12:00 PM &ndash; 11:00 PM</span>
+      </div>
+      <div class="location-detail">
+        <svg width="20" height="20" fill="none" stroke="#C9A84C" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.1 5.18 2 2 0 015.09 3h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L9.09 10.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 17.92z"/></svg>
+        <span>+20 10 0000 0000</span>
+      </div>
+    </div>
+    <div class="map-wrap reveal">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3456.789!2d31.2257!3d29.9896!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14584587e81d0a9b%3A0x7b3f8bdc4b3e6a8a!2sAbd+al+Aziz+soud%2C+Al+Manyal+Al+Gharbi%2C+Old+Cairo!5e0!3m2!1sen!2seg!4v1" style="border:0" allowfullscreen loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo"><img src="data:image/webp;base64,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" alt="Era"></div>
+  <p class="footer-name">ERA</p>
+  <p>the real taste of india</p>
+  <p style="margin-top:1.5rem">&copy; 2025 Era Restaurant &middot; Old Cairo &middot; All Rights Reserved</p>
+</footer>
+
+<div id="cart-overlay" onclick="closeCart()"></div>
+<div id="cart-panel">
+  <div class="cart-hd">
+    <h2>Your Order</h2>
+    <button class="close-btn" onclick="closeCart()"><svg width="22" height="22" fill="none" stroke="#C9A84C" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="cart-body">
+    <div class="cart-empty" id="cart-empty">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <p style="margin-top:.75rem">Your cart is empty.<br>Add some dishes to get started.</p>
+    </div>
+    <div id="cart-items"></div>
+  </div>
+  <div class="cart-ft" id="cart-ft" style="display:none">
+    <div class="cart-total-row"><span>Total</span><span id="cart-total">EGP 0</span></div>
+    <div class="cart-pts-line" id="cart-pts-line">You will earn 0 points on this order</div>
+    <div class="checkout-btns">
+      <button class="btn-wa" onclick="checkoutWA()">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Send Order to Era on WhatsApp
+      </button>
+      <p class="checkout-hint">Your order is sent straight to the restaurant automatically &mdash; no need to wait for a reply before they start preparing it.</p>
+      <button class="btn-talabat" onclick="checkoutTalabat()">Order on Talabat Instead</button>
+      <p class="checkout-hint">Opens Era's official Talabat page so you can complete checkout there.</p>
+    </div>
+  </div>
+
+</div>
+
+<div id="auth-modal">
+  <div class="auth-box">
+    <button class="auth-close" onclick="closeAuth()">&#x2715;</button>
+    <h2 id="auth-title">Welcome Back</h2>
+    <p id="auth-sub">Sign in to earn and redeem loyalty points</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuth('login',this)">Sign In</button>
+      <button class="auth-tab" onclick="switchAuth('signup',this)">Register</button>
+    </div>
+    <div id="login-form">
+      <div class="form-group"><label>Email</label><input type="email" id="li-email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="li-pass" placeholder="Your password" autocomplete="current-password"></div>
+      <div class="auth-err" id="li-err"></div>
+      <div class="auth-spinner" id="li-spin">Signing in...</div>
+      <button class="btn-auth" onclick="doLogin()">Sign In</button>
+    </div>
+    <div id="signup-form" style="display:none">
+      <div class="form-group"><label>Full Name</label><input type="text" id="su-name" placeholder="Your name" autocomplete="name"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="su-email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="form-group"><label>Password (min 8 characters)</label><input type="password" id="su-pass" placeholder="Create a password" autocomplete="new-password"></div>
+      <div class="auth-err" id="su-err"></div>
+      <div class="auth-spinner" id="su-spin">Creating account...</div>
+      <button class="btn-auth" onclick="doSignup()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<div id="pts-modal">
+  <div class="pts-box">
+    <button class="pts-modal-close" onclick="closePtsModal()">&#x2715;</button>
+    <h2>Loyalty Points</h2>
+    <p>Earn points with every order and redeem them for free dishes</p>
+    <div class="pts-counter-big">
+      <span class="pts-counter-num" id="pts-modal-num">0</span>
+      <span class="pts-counter-label">Points Available</span>
+      <div class="pts-progress-track"><div class="pts-progress-fill" id="pts-fill" style="width:0%"></div></div>
+      <div class="pts-progress-labels"><span>0</span><span>500 pts</span></div>
+    </div>
+    <h3 class="pts-section-title">Dishes You Can Redeem Now</h3>
+    <div id="redeem-list"></div>
+  </div>
+</div>
+
+<div id="order-code-modal">
+  <div class="order-code-box">
+    <button class="pts-modal-close" onclick="closeOrderCodeModal()">&#x2715;</button>
+    <div class="order-code-icon">&#x2713;</div>
+    <h2>Order Sent</h2>
+    <p>Show this code to staff when you pick up your order</p>
+    <div class="order-code-display" id="order-code-display">ERA-0000</div>
+    <p class="order-code-hint" id="order-code-pts-line">Show this code at pickup.</p>
+    <button class="btn-auth" onclick="closeOrderCodeModal()">Got It</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var MENU = [
+  {id:1,  name:"Paneer Tikka",         price:145, pts:15, cat:"veg",      img:"https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=600&q=80", popular:false, desc:"Soft cottage cheese cubes marinated in spiced yogurt, grilled to smoky perfection in a tandoor oven."},
+  {id:2,  name:"Dal Makhani",          price:110, pts:11, cat:"veg",      img:"https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80", popular:false, desc:"Black lentils slow-cooked overnight with butter, cream, and a secret blend of aromatic spices."},
+  {id:3,  name:"Palak Paneer",         price:130, pts:13, cat:"veg",      img:"https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&q=80", popular:false, desc:"Velvety spinach gravy wrapped around pillowy cottage cheese, a timeless North Indian classic."},
+  {id:4,  name:"Aloo Gobi",            price:95,  pts:10, cat:"veg",      img:"https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&q=80", popular:false, desc:"Turmeric-kissed cauliflower and potato, tossed with cumin, ginger, and fresh coriander."},
+  {id:5,  name:"Chana Masala",         price:100, pts:10, cat:"veg",      img:"https://images.unsplash.com/photo-1630383249896-424e482df921?w=600&q=80", popular:false, desc:"Hearty chickpeas simmered in a tangy tomato masala with an unforgettable depth of flavor."},
+  {id:6,  name:"Matar Paneer",         price:125, pts:13, cat:"veg",      img:"https://images.unsplash.com/photo-1628294895950-9805252327bc?w=600&q=80", popular:false, desc:"Fresh green peas and cottage cheese in a rich golden onion-tomato gravy, homestyle comfort."},
+  {id:7,  name:"Butter Chicken",       price:195, pts:20, cat:"popular",  img:"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=600&q=80", popular:true,  desc:"Tender tandoori chicken bathed in our legendary silky tomato-butter sauce. The dish that put us on the map."},
+  {id:8,  name:"Chicken Tikka Masala", price:185, pts:19, cat:"popular",  img:"https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&q=80", popular:true,  desc:"Succulent chicken tikka in a vibrant spiced masala, rich, creamy, and absolutely addictive."},
+  {id:9,  name:"Lamb Rogan Josh",      price:215, pts:22, cat:"popular",  img:"https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=600&q=80", popular:true,  desc:"Kashmiri-style slow-braised lamb in a deep aromatic red gravy with whole spices and dry chilies."},
+  {id:10, name:"Chicken Biryani",      price:175, pts:18, cat:"popular",  img:"https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&q=80", popular:true,  desc:"Fragrant basmati rice layered with spiced chicken, caramelized onions, saffron, and fresh mint."},
+  {id:11, name:"Seekh Kebab Platter",  price:165, pts:17, cat:"popular",  img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&q=80", popular:false, desc:"Spiced minced lamb rolls grilled on skewers, served with mint chutney and pickled onions."},
+  {id:12, name:"Mutton Korma",         price:225, pts:23, cat:"mains",    img:"https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=600&q=80", popular:false, desc:"Slow-cooked mutton in a rich Mughal-style gravy of cashews, cream, and fragrant whole spices."},
+  {id:13, name:"Fish Curry",           price:190, pts:19, cat:"mains",    img:"https://images.unsplash.com/photo-1626100134245-dc3e1e6e0e1c?w=600&q=80", popular:false, desc:"Fresh river fish in a bold coastal-style curry with coconut milk, tamarind, and mustard seeds."},
+  {id:14, name:"Prawn Masala",         price:210, pts:21, cat:"mains",    img:"https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?w=600&q=80", popular:false, desc:"Plump prawns tossed in a fiery coastal masala with tomatoes and fresh curry leaves."},
+  {id:15, name:"Garlic Naan",          price:35,  pts:4,  cat:"mains",    img:"https://images.unsplash.com/photo-1542826438-bd32f43d626f?w=600&q=80", popular:false, desc:"Hand-stretched dough kissed with butter and fresh garlic, blistered in our clay tandoor."},
+  {id:16, name:"Lamb Saag",            price:205, pts:21, cat:"mains",    img:"https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&q=80", popular:false, desc:"Tender lamb shoulder slow-cooked with fresh spinach and warming spices."},
+  {id:17, name:"Veg Biryani",          price:140, pts:14, cat:"mains",    img:"https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&q=80", popular:false, desc:"Aromatic basmati rice cooked dum-style with seasonal vegetables, saffron, and rose water."},
+  {id:18, name:"Tandoori Platter",     price:255, pts:26, cat:"mains",    img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&q=80", popular:false, desc:"A regal platter of mixed tandoori meats served sizzling on cast iron."},
+  {id:19, name:"Gulab Jamun",          price:65,  pts:7,  cat:"desserts", img:"https://images.unsplash.com/photo-1601303516534-bf4235c51a0f?w=600&q=80", popular:true,  desc:"Melt-in-your-mouth milk-solid dumplings soaked in rose-scented sugar syrup. Pure indulgence."},
+  {id:20, name:"Mango Kulfi",          price:75,  pts:8,  cat:"desserts", img:"https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=600&q=80", popular:false, desc:"Dense creamy Indian ice cream infused with the sweet fragrance of Alphonso mangoes and cardamom."},
+  {id:21, name:"Kheer",               price:60,  pts:6,  cat:"desserts", img:"https://images.unsplash.com/photo-1590301157890-4810ed352733?w=600&q=80", popular:false, desc:"Slow-simmered rice pudding with saffron, pistachios, and rose petals."},
+  {id:22, name:"Gajar Ka Halwa",      price:70,  pts:7,  cat:"desserts", img:"https://images.unsplash.com/photo-1606471191009-63994c53433b?w=600&q=80", popular:false, desc:"Slow-cooked carrot pudding with ghee, khoya, and green cardamom, a winter classic year-round."}
+];
+
+// ---- Built-in Supabase connection (ships pre-configured for all visitors) ----
+// The anon key is safe to expose publicly - it's designed for client-side use.
+// Actual security comes from Row Level Security policies on the database, not from hiding this key.
+var SUPABASE_URL = "https://nzisxlbrllolyjhsevfc.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_aqTmtGnq2fO-sOoHiE2fsQ_BMrVw61S";
+
+var sb = null;
+var cart = JSON.parse(localStorage.getItem("era_cart") || "[]");
+var currentUser = null;
+var currentFilter = "all";
+
+function initSb(url, key) {
+  try {
+    sb = supabase.createClient(url, key, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+    sb.auth.onAuthStateChange(function(event, session) {
+      if (event === "SIGNED_IN" && session) {
+        if (!currentUser || currentUser.id !== session.user.id) { loadProfile(session.user); }
+      } else if (event === "SIGNED_OUT") {
+        setLoggedOutUI();
+      } else if (event === "TOKEN_REFRESHED" && session && !currentUser) {
+        loadProfile(session.user);
+      }
+    });
+    return true;
+  } catch(e) { return false; }
+}
+
+function saveConfig() {
+  var url = document.getElementById("cfg-url").value.trim();
+  var key = document.getElementById("cfg-key").value.trim();
+  var err = document.getElementById("cfg-err");
+  if (!url || !key) { err.textContent = "Please enter both fields."; err.classList.add("show"); return; }
+  if (initSb(url, key)) {
+    localStorage.setItem("era_sb_url", url);
+    localStorage.setItem("era_sb_key", key);
+    document.getElementById("cfg-modal").classList.remove("show");
+    checkSession();
+    showToast("Database connected");
+  } else {
+    err.textContent = "Connection failed. Check your credentials.";
+    err.classList.add("show");
+  }
+}
+function skipConfig() { document.getElementById("cfg-modal").classList.remove("show"); }
+
+async function checkSession() {
+  if (!sb) return;
+  showSessionLoading(true);
+  try {
+    var res = await sb.auth.getSession();
+    if (res.data && res.data.session) {
+      await loadProfile(res.data.session.user);
+    } else {
+      setLoggedOutUI();
+    }
+  } catch (e) {
+    setLoggedOutUI();
+  }
+  showSessionLoading(false);
+}
+
+function showSessionLoading(active) {
+  var el = document.getElementById("session-loading");
+  if (active) { el.classList.add("active"); } else { el.classList.remove("active"); }
+}
+
+async function loadProfile(authUser) {
+  var fallbackName = authUser.user_metadata && authUser.user_metadata.full_name
+    ? authUser.user_metadata.full_name
+    : authUser.email.split("@")[0];
+  try {
+    var res = await sb.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
+    if (res.error) {
+      console.error("Profile lookup failed:", res.error);
+      showToast("Could not load your profile: " + res.error.message);
+      currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0 };
+      updateUserUI();
+      return;
+    }
+    if (res.data) {
+      var resolvedName = (res.data.full_name && res.data.full_name.trim()) ? res.data.full_name.trim() : fallbackName;
+      currentUser = { id: authUser.id, email: authUser.email, name: resolvedName, points: res.data.points || 0 };
+      // Backfill the name server-side if it was missing, so this self-heals going forward.
+      if (!res.data.full_name || !res.data.full_name.trim()) {
+        sb.from("profiles").update({ full_name: resolvedName }).eq("id", authUser.id);
+      }
+      updateUserUI();
+      return;
+    }
+    // No profile row exists yet for this auth user - create one now.
+    var ins = await sb.from("profiles").insert({ id: authUser.id, full_name: fallbackName, email: authUser.email, points: 50 }).select().maybeSingle();
+    if (ins.error) {
+      console.error("Profile creation failed:", ins.error);
+      showToast("Signed in, but profile setup failed: " + ins.error.message);
+      currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0 };
+      updateUserUI();
+      return;
+    }
+    currentUser = { id: authUser.id, email: authUser.email, name: (ins.data && ins.data.full_name) || fallbackName, points: (ins.data && ins.data.points) || 50 };
+    updateUserUI();
+  } catch (e) {
+    console.error("loadProfile exception:", e);
+    showToast("Sign-in error: " + (e && e.message ? e.message : "unknown error"));
+    currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0 };
+    updateUserUI();
+  }
+}
+
+function setLoggedOutUI() {
+  currentUser = null;
+  document.getElementById("auth-btn").style.display = "inline-block";
+  document.getElementById("auth-btn").textContent = "Sign In";
+  document.getElementById("account-pill").classList.remove("show");
+  document.getElementById("points-bar").classList.remove("show");
+  document.getElementById("welcome-banner").classList.remove("show");
+  var mobLink = document.getElementById("mob-account-link");
+  mobLink.textContent = "Sign In / Register";
+  mobLink.setAttribute("onclick", "handleAuth();toggleMob()");
+  closeAccountDropdown();
+  renderMenu(currentFilter);
+}
+
+function handleAuth() { if (currentUser) { toggleAccountDropdown(); } else { openAuth(); } }
+function openAuth() { document.getElementById("auth-modal").classList.add("open"); }
+function closeAuth() { document.getElementById("auth-modal").classList.remove("open"); }
+
+function toggleAccountDropdown(e) {
+  if (e) { e.stopPropagation(); }
+  document.getElementById("account-dropdown").classList.toggle("open");
+}
+function closeAccountDropdown() {
+  document.getElementById("account-dropdown").classList.remove("open");
+}
+document.addEventListener("click", function(e) {
+  var dd = document.getElementById("account-dropdown");
+  var pill = document.getElementById("account-pill");
+  if (dd && dd.classList.contains("open") && !dd.contains(e.target) && e.target !== pill && !pill.contains(e.target)) {
+    closeAccountDropdown();
+  }
+});
+
+function switchAuth(tab, btn) {
+  document.querySelectorAll(".auth-tab").forEach(function(b) { b.classList.remove("active"); });
+  btn.classList.add("active");
+  document.getElementById("login-form").style.display = tab === "login" ? "block" : "none";
+  document.getElementById("signup-form").style.display = tab === "signup" ? "block" : "none";
+  document.getElementById("auth-title").textContent = tab === "login" ? "Welcome Back" : "Create Account";
+  document.getElementById("auth-sub").textContent = tab === "login" ? "Sign in to earn and redeem loyalty points" : "Join the Era family today";
+}
+
+async function doLogin() {
+  if (!sb) { showErr("li-err", "No database connected. Please configure Supabase first."); return; }
+  var email = document.getElementById("li-email").value.trim();
+  var pass  = document.getElementById("li-pass").value;
+  if (!email || !pass) { showErr("li-err", "Please fill all fields."); return; }
+  hideErr("li-err"); showSpin("li-spin");
+  var res = await sb.auth.signInWithPassword({ email: email, password: pass });
+  hideSpin("li-spin");
+  if (res.error) { showErr("li-err", res.error.message); return; }
+  await loadProfile(res.data.user);
+  closeAuth();
+  document.getElementById("li-email").value = "";
+  document.getElementById("li-pass").value = "";
+  showToast("Welcome back, " + currentUser.name + "!");
+}
+
+async function doSignup() {
+  if (!sb) { showErr("su-err", "No database connected. Please configure Supabase first."); return; }
+  var name  = document.getElementById("su-name").value.trim();
+  var email = document.getElementById("su-email").value.trim();
+  var pass  = document.getElementById("su-pass").value;
+  if (!name || !email || !pass) { showErr("su-err", "Please fill all fields."); return; }
+  if (pass.length < 8) { showErr("su-err", "Password must be at least 8 characters."); return; }
+  hideErr("su-err"); showSpin("su-spin");
+  var res = await sb.auth.signUp({ email: email, password: pass, options: { data: { full_name: name } } });
+  if (res.error) { hideSpin("su-spin"); showErr("su-err", res.error.message); return; }
+  if (!res.data.user) {
+    hideSpin("su-spin");
+    showErr("su-err", "Check your email to confirm your account, then sign in.");
+    return;
+  }
+  var ins = await sb.from("profiles").insert({ id: res.data.user.id, full_name: name, email: email, points: 50 });
+  hideSpin("su-spin");
+  if (ins.error && ins.error.code !== "23505") {
+    showErr("su-err", "Account created but profile setup failed: " + ins.error.message);
+    return;
+  }
+  currentUser = { id: res.data.user.id, email: email, name: name, points: 50 };
+  updateUserUI(); closeAuth();
+  document.getElementById("su-name").value = "";
+  document.getElementById("su-email").value = "";
+  document.getElementById("su-pass").value = "";
+  showToast("Welcome, " + name + "! You received 50 welcome points");
+}
+
+async function doLogout() {
+  if (sb) { await sb.auth.signOut(); }
+  setLoggedOutUI();
+  closeCart();
+  showToast("Signed out. See you soon!");
+}
+
+function updateUserUI() {
+  if (!currentUser) { setLoggedOutUI(); return; }
+  var first = currentUser.name.split(" ")[0];
+  var initial = currentUser.name.charAt(0).toUpperCase();
+
+  document.getElementById("auth-btn").style.display = "none";
+  document.getElementById("account-pill").classList.add("show");
+  document.getElementById("account-firstname").textContent = first;
+  document.getElementById("account-avatar").textContent = initial;
+  document.getElementById("dd-name").textContent = currentUser.name;
+  document.getElementById("dd-email").textContent = currentUser.email;
+  document.getElementById("dd-points").textContent = currentUser.points;
+
+  document.getElementById("pts-num").textContent = currentUser.points;
+  document.getElementById("points-bar").classList.add("show");
+
+  document.getElementById("welcome-name").textContent = first;
+  document.getElementById("welcome-pts-val").textContent = currentUser.points;
+  document.getElementById("welcome-banner").classList.add("show");
+
+  document.getElementById("mob-account-link").textContent = first + " - Sign Out";
+  document.getElementById("mob-account-link").setAttribute("onclick", "doLogout();toggleMob()");
+
+  renderMenu(currentFilter);
+}
+
+function showErr(id, msg) { var e = document.getElementById(id); e.textContent = msg; e.classList.add("show"); }
+function hideErr(id) { document.getElementById(id).classList.remove("show"); }
+function showSpin(id) { document.getElementById(id).classList.add("show"); }
+function hideSpin(id) { document.getElementById(id).classList.remove("show"); }
+
+function openPtsModal() {
+  if (!currentUser) { openAuth(); return; }
+  var pts = currentUser.points;
+  document.getElementById("pts-modal-num").textContent = pts;
+  var pct = Math.min(100, (pts / 500) * 100);
+  document.getElementById("pts-fill").style.width = "0%";
+  var redeemable = MENU.filter(function(i) { return i.pts <= pts; }).sort(function(a,b) { return b.pts - a.pts; });
+  var parts = [];
+  if (redeemable.length === 0) {
+    parts.push('<p class="redeem-empty-msg">Earn more points to unlock free dishes.</p>');
+  } else {
+    for (var i = 0; i < redeemable.length; i++) {
+      var item = redeemable[i];
+      parts.push('<div class="redeem-row">');
+      parts.push('<img src="' + item.img + '" alt="' + item.name + '" loading="lazy">');
+      parts.push('<div class="redeem-row-info">');
+      parts.push('<div class="redeem-row-name">' + item.name + '</div>');
+      parts.push('<div class="redeem-row-pts">' + item.pts + ' pts - Worth EGP ' + item.price + '</div>');
+      parts.push('</div>');
+      parts.push('<button class="btn-redeem-sm" onclick="redeemDish(' + item.id + ')">Redeem</button>');
+      parts.push('</div>');
+    }
+  }
+  document.getElementById("redeem-list").innerHTML = parts.join("");
+  document.getElementById("pts-modal").classList.add("open");
+  setTimeout(function() { document.getElementById("pts-fill").style.width = pct + "%"; }, 60);
+}
+function closePtsModal() { document.getElementById("pts-modal").classList.remove("open"); }
+
+async function redeemDish(id) {
+  var dish = null;
+  for (var i = 0; i < MENU.length; i++) { if (MENU[i].id === id) { dish = MENU[i]; break; } }
+  if (!currentUser || currentUser.points < dish.pts) { showToast("Not enough points"); return; }
+  if (!confirm("Redeem " + dish.name + " for free using " + dish.pts + " points?")) return;
+  currentUser.points -= dish.pts;
+  if (sb) { await sb.from("profiles").update({ points: currentUser.points }).eq("id", currentUser.id); }
+  var found = false;
+  for (var i = 0; i < cart.length; i++) { if (cart[i].id === id && cart[i].free) { cart[i].qty++; found = true; break; } }
+  if (!found) { var c = {}; for (var k in dish) { c[k] = dish[k]; } c.qty = 1; c.free = true; cart.push(c); }
+  saveCart(); updateCartUI(); updateUserUI(); closePtsModal();
+  showToast(dish.name + " added to cart for free");
+}
+
+function renderMenu(filter) {
+  var items = filter === "all" ? MENU : MENU.filter(function(i) { return i.cat === filter; });
+  var parts = [];
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var canRedeem = currentUser && currentUser.points >= item.pts;
+    parts.push('<div class="dish-card reveal">');
+    parts.push('<div class="dish-img-wrap">');
+    parts.push('<img src="' + item.img + '" alt="' + item.name + '" loading="lazy">');
+    parts.push('<div class="dish-img-overlay"></div>');
+    if (item.popular) { parts.push('<span class="dish-popular-tag">Popular</span>'); }
+    parts.push('<span class="dish-cat-tag">' + item.cat + '</span>');
+    parts.push('</div>');
+    parts.push('<div class="dish-body">');
+    parts.push('<div class="dish-header-row">');
+    parts.push('<div class="dish-name">' + item.name + '</div>');
+    parts.push('<div class="dish-price">EGP ' + item.price + '</div>');
+    parts.push('</div>');
+    parts.push('<p class="dish-desc">' + item.desc + '</p>');
+    parts.push('<div class="dish-footer-row">');
+    parts.push('<span class="dish-pts">' + item.pts + ' pts</span>');
+    parts.push('<div class="dish-actions">');
+    if (currentUser) {
+      if (canRedeem) {
+        parts.push('<button class="redeem-btn" onclick="quickRedeem(' + item.id + ')">Redeem</button>');
+      } else {
+        parts.push('<button class="redeem-btn" disabled>' + item.pts + ' pts needed</button>');
+      }
+    }
+    parts.push('<button class="add-btn" onclick="addToCart(' + item.id + ', event)">+</button>');
+    parts.push('</div></div></div></div>');
+  }
+  document.getElementById("menu-grid").innerHTML = parts.join("");
+  setTimeout(revealOnScroll, 60);
+}
+
+function filterMenu(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll(".tab-btn").forEach(function(b) { b.classList.remove("active"); });
+  btn.classList.add("active");
+  renderMenu(cat);
+}
+
+async function quickRedeem(id) {
+  var dish = null;
+  for (var i = 0; i < MENU.length; i++) { if (MENU[i].id === id) { dish = MENU[i]; break; } }
+  if (!currentUser || currentUser.points < dish.pts) { showToast("Not enough points"); return; }
+  await redeemDish(id);
+}
+
+function saveCart() { localStorage.setItem("era_cart", JSON.stringify(cart)); }
+
+function addToCart(id, event) {
+  var item = null;
+  for (var i = 0; i < MENU.length; i++) { if (MENU[i].id === id) { item = MENU[i]; break; } }
+  var found = false;
+  for (var i = 0; i < cart.length; i++) { if (cart[i].id === id && !cart[i].free) { cart[i].qty++; found = true; break; } }
+  if (!found) { var c = {}; for (var k in item) { c[k] = item[k]; } c.qty = 1; cart.push(c); }
+  saveCart(); updateCartUI();
+  showToast(item.name + " added to cart");
+  if (event && event.target) { event.target.style.transform = "scale(1.4)"; setTimeout(function() { event.target.style.transform = ""; }, 220); }
+}
+
+function updateCartUI() {
+  var total = 0;
+  for (var i = 0; i < cart.length; i++) { total += cart[i].qty; }
+  var el = document.getElementById("cart-count");
+  el.textContent = total;
+  if (total > 0) { el.classList.add("show"); } else { el.classList.remove("show"); }
+  renderCart();
+}
+
+function renderCart() {
+  var has = cart.length > 0;
+  document.getElementById("cart-empty").style.display = has ? "none" : "block";
+  document.getElementById("cart-ft").style.display = has ? "block" : "none";
+  if (!has) { document.getElementById("cart-items").innerHTML = ""; return; }
+  var parts = [];
+  for (var i = 0; i < cart.length; i++) {
+    var item = cart[i];
+    parts.push('<div class="cart-item">');
+    parts.push('<div class="cart-item-info">');
+    parts.push('<h4>' + item.name + (item.free ? ' (Free)' : '') + '</h4>');
+    parts.push('<p>' + (item.free ? 'Redeemed' : 'EGP ' + item.price) + ' x ' + item.qty + ' = ' + (item.free ? 'Free' : 'EGP ' + (item.price * item.qty)) + '</p>');
+    parts.push('</div>');
+    parts.push('<div class="cart-qty">');
+    parts.push('<button class="qty-btn" onclick="chQty(' + item.id + ',' + (item.free ? 1 : 0) + ',-1)">-</button>');
+    parts.push('<span>' + item.qty + '</span>');
+    parts.push('<button class="qty-btn" onclick="chQty(' + item.id + ',' + (item.free ? 1 : 0) + ',1)">+</button>');
+    parts.push('</div></div>');
+  }
+  document.getElementById("cart-items").innerHTML = parts.join("");
+  var totalPrice = 0;
+  var totalPts = 0;
+  for (var i = 0; i < cart.length; i++) {
+    if (!cart[i].free) { totalPrice += cart[i].price * cart[i].qty; }
+    totalPts += cart[i].pts * cart[i].qty;
+  }
+  document.getElementById("cart-total").textContent = "EGP " + totalPrice;
+  document.getElementById("cart-pts-line").textContent = "You will earn " + totalPts + " points on this order";
+}
+
+function chQty(id, isFree, delta) {
+  var idx = -1;
+  for (var i = 0; i < cart.length; i++) {
+    if (cart[i].id === id && !!cart[i].free === !!isFree) { idx = i; break; }
+  }
+  if (idx < 0) return;
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) { cart.splice(idx, 1); }
+  saveCart(); updateCartUI();
+}
+
+function openCart()  { document.getElementById("cart-panel").classList.add("open"); document.getElementById("cart-overlay").classList.add("show"); renderCart(); }
+function closeCart() { document.getElementById("cart-panel").classList.remove("open"); document.getElementById("cart-overlay").classList.remove("show"); }
+
+function generateOrderCode() {
+  var n = Math.floor(1000 + Math.random() * 9000);
+  return "ERA-" + n;
+}
+
+async function createPendingOrder(channel) {
+  var totalPrice = 0, totalPts = 0;
+  for (var i = 0; i < cart.length; i++) {
+    if (!cart[i].free) { totalPrice += cart[i].price * cart[i].qty; }
+    totalPts += cart[i].pts * cart[i].qty;
+  }
+  var code = generateOrderCode();
+  var itemsPayload = cart.map(function(i) { return { name: i.name, qty: i.qty, price: i.price, free: !!i.free }; });
+
+  if (sb) {
+    var row = {
+      order_code: code,
+      user_id: currentUser ? currentUser.id : null,
+      customer_name: currentUser ? currentUser.name : "Guest",
+      items: itemsPayload,
+      total_price: totalPrice,
+      points_value: totalPts,
+      channel: channel,
+      status: "pending"
+    };
+    var res = await sb.from("orders").insert(row).select().maybeSingle();
+    if (res.error) {
+      console.error("Order creation failed:", res.error);
+      showToast("Could not save your order record: " + res.error.message);
+    } else if (res.data && res.data.order_code) {
+      code = res.data.order_code;
+    }
+  }
+
+  return { code: code, totalPrice: totalPrice, totalPts: totalPts };
+}
+
+function showOrderCodeModal(code, totalPts) {
+  var modal = document.getElementById("order-code-modal");
+  document.getElementById("order-code-display").textContent = code;
+  document.getElementById("order-code-pts-line").textContent = currentUser
+    ? ("Show this code at pickup to receive " + totalPts + " points.")
+    : "Show this code at pickup to confirm your order.";
+  modal.classList.add("open");
+}
+function closeOrderCodeModal() { document.getElementById("order-code-modal").classList.remove("open"); }
+
+async function checkoutWA() {
+  if (!cart.length) { showToast("Your cart is empty"); return; }
+  var order = await createPendingOrder("whatsapp");
+
+  var msg = "*New Order - Era Restaurant*\n";
+  msg += "Order Code: " + order.code + "\n";
+  msg += "--------------------------------\n";
+  for (var i = 0; i < cart.length; i++) {
+    var item = cart[i];
+    msg += item.name + " x" + item.qty + " - " + (item.free ? "FREE" : "EGP " + (item.price * item.qty)) + "\n";
+  }
+  msg += "--------------------------------\n";
+  msg += "*Total: EGP " + order.totalPrice + "*\n";
+  if (currentUser) { msg += "Customer: " + currentUser.name + "\n"; }
+  msg += "Please confirm this order. Points are awarded at pickup.";
+
+  window.open("https://wa.me/201000000000?text=" + encodeURIComponent(msg), "_blank");
+  showOrderCodeModal(order.code, order.totalPts);
+  cart = []; saveCart(); updateCartUI(); closeCart();
+}
+
+function checkoutTalabat() {
+  if (!cart.length) { showToast("Your cart is empty"); return; }
+  if (!confirm("Talabat does not support adding items from other websites directly to its cart. You will be taken to the Era page on Talabat to re-select your items and complete checkout there. Continue?")) { return; }
+  window.open("https://www.talabat.com/egypt/restaurant/792374/era-indian-restaurant", "_blank");
+}
+
+function goTo(id) {
+  var el = id === "hero" ? document.body : document.getElementById(id);
+  if (el) { el.scrollIntoView({ behavior: "smooth" }); }
+}
+function toggleTheme() {
+  document.body.dataset.theme = document.body.dataset.theme === "dark" ? "light" : "dark";
+  localStorage.setItem("era_theme", document.body.dataset.theme);
+  updateThemeLabel();
+  showToast(document.body.dataset.theme === "dark" ? "Dark mode on" : "Light mode on");
+}
+function updateThemeLabel() {
+  var label = document.getElementById("mob-theme-label");
+  if (label) { label.textContent = document.body.dataset.theme === "dark" ? "Dark Mode" : "Light Mode"; }
+}
+function toggleMob() { document.getElementById("mob-nav").classList.toggle("open"); }
+
+window.addEventListener("scroll", function() {
+  document.getElementById("nav").classList.toggle("scrolled", window.scrollY > 60);
+  revealOnScroll();
+});
+function revealOnScroll() {
+  var els = document.querySelectorAll(".reveal");
+  for (var i = 0; i < els.length; i++) {
+    if (els[i].getBoundingClientRect().top < window.innerHeight - 80) {
+      els[i].classList.add("visible");
+    }
+  }
+}
+
+var _toast;
+function showToast(msg) {
+  var t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(_toast); _toast = setTimeout(function() { t.classList.remove("show"); }, 3200);
+}
+
+window.addEventListener("DOMContentLoaded", function() {
+  var theme = localStorage.getItem("era_theme");
+  if (theme) { document.body.dataset.theme = theme; }
+  updateThemeLabel();
+
+  var url = SUPABASE_URL;
+  var key = SUPABASE_ANON_KEY;
+  var hasBuiltIn = url && key && url.indexOf("https://") === 0 && key.indexOf("PASTE_YOUR") !== 0;
+
+  if (!hasBuiltIn) {
+    // Fall back to a manually entered connection saved in this browser only.
+    url = localStorage.getItem("era_sb_url");
+    key = localStorage.getItem("era_sb_key");
+  }
+
+  if (url && key && initSb(url, key)) {
+    checkSession();
+  } else {
+    document.getElementById("cfg-modal").classList.add("show");
+  }
+  renderMenu("all");
+  updateCartUI();
+  setTimeout(revealOnScroll, 100);
+});
+</script>
+</body>
+</html>

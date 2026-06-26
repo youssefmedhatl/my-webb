@@ -719,32 +719,44 @@ async function doLogin() {
 }
 
 async function doSignup() {
-  if (!sb) { showErr("su-err", "No database connected. Please configure Supabase first."); return; }
+  if (!sb) { showErr("su-err", "No database connected."); return; }
   var name  = document.getElementById("su-name").value.trim();
   var email = document.getElementById("su-email").value.trim();
   var pass  = document.getElementById("su-pass").value;
   if (!name || !email || !pass) { showErr("su-err", "Please fill all fields."); return; }
   if (pass.length < 8) { showErr("su-err", "Password must be at least 8 characters."); return; }
   hideErr("su-err"); showSpin("su-spin");
+
+  // Step 1: Create the auth account
   var res = await sb.auth.signUp({ email: email, password: pass, options: { data: { full_name: name } } });
   if (res.error) { hideSpin("su-spin"); showErr("su-err", friendlyAuthError(res.error.message)); return; }
   if (!res.data.user) {
     hideSpin("su-spin");
-    showErr("su-err", "Check your email to confirm your account, then sign in.");
+    showErr("su-err", "Please check your email to confirm your account, then sign in.");
     return;
   }
-  var ins = await sb.from("profiles").insert({ id: res.data.user.id, full_name: name, email: email, points: 50 });
+
+  // Step 2: Create the profile row with 50 welcome points
+  await sb.from("profiles").insert({ id: res.data.user.id, full_name: name, email: email, points: 50 });
+
+  // Step 3: Sign in immediately so the user has an active session right now
+  // (Supabase signUp alone doesn't guarantee an active session if email confirm is on)
+  var loginRes = await sb.auth.signInWithPassword({ email: email, password: pass });
   hideSpin("su-spin");
-  if (ins.error && ins.error.code !== "23505") {
-    showErr("su-err", "Account created! Please sign in.");
+
+  if (loginRes.error) {
+    // Account was created but auto-login failed (e.g. email confirm still required)
+    showErr("su-err", "Account created! Please check your email to confirm, then sign in.");
     return;
   }
-  currentUser = { id: res.data.user.id, email: email, name: name, points: 50 };
-  updateUserUI(); closeAuth();
+
+  // Step 4: Load the profile and update the UI
+  await loadProfile(loginRes.data.user);
+  closeAuth();
   document.getElementById("su-name").value = "";
   document.getElementById("su-email").value = "";
   document.getElementById("su-pass").value = "";
-  showToast("Welcome, " + name + "! You received 50 welcome points");
+  showToast("Welcome to Era, " + name + "! You have 50 points to start with");
 }
 
 async function doLogout() {

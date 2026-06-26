@@ -221,6 +221,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text-dar
 .order-code-hint{font-size:.8rem;color:var(--gold);margin-bottom:1.5rem !important}
 .btn-redeem-sm:hover{background:var(--gold-light)}
 .redeem-empty-msg{color:var(--text-muted);font-size:.85rem;padding:.5rem 0}
+.redeem-locked-msg{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:10px;padding:1rem 1.25rem;text-align:center}
 
 #cfg-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:1rem}
 #cfg-modal.show{display:flex}
@@ -627,13 +628,13 @@ async function loadProfile(authUser) {
     if (res.error) {
       console.error("Profile lookup failed:", res.error);
       showToast("Something went wrong loading your account. Please try again.");
-      currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0 };
+      currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0, confirmedOrders: 0 };
       updateUserUI();
       return;
     }
     if (res.data) {
       var resolvedName = (res.data.full_name && res.data.full_name.trim()) ? res.data.full_name.trim() : fallbackName;
-      currentUser = { id: authUser.id, email: authUser.email, name: resolvedName, points: res.data.points || 0 };
+      currentUser = { id: authUser.id, email: authUser.email, name: resolvedName, points: res.data.points || 0, confirmedOrders: res.data.confirmed_orders || 0 };
       // Backfill the name server-side if it was missing, so this self-heals going forward.
       if (!res.data.full_name || !res.data.full_name.trim()) {
         sb.from("profiles").update({ full_name: resolvedName }).eq("id", authUser.id);
@@ -641,21 +642,21 @@ async function loadProfile(authUser) {
       updateUserUI();
       return;
     }
-    // No profile row exists yet for this auth user - create one now.
-    var ins = await sb.from("profiles").insert({ id: authUser.id, full_name: fallbackName, email: authUser.email, points: 50 }).select().maybeSingle();
+    // No profile row exists yet for this auth user - create one now with 0 points.
+    var ins = await sb.from("profiles").insert({ id: authUser.id, full_name: fallbackName, email: authUser.email, points: 0, confirmed_orders: 0 }).select().maybeSingle();
     if (ins.error) {
       console.error("Profile creation failed:", ins.error);
       showToast("Signed in successfully! Some features may take a moment to load.");
-      currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0 };
+      currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0, confirmedOrders: 0 };
       updateUserUI();
       return;
     }
-    currentUser = { id: authUser.id, email: authUser.email, name: (ins.data && ins.data.full_name) || fallbackName, points: (ins.data && ins.data.points) || 50 };
+    currentUser = { id: authUser.id, email: authUser.email, name: (ins.data && ins.data.full_name) || fallbackName, points: 0, confirmedOrders: 0 };
     updateUserUI();
   } catch (e) {
     console.error("loadProfile exception:", e);
     showToast("Sign-in failed. Please check your connection and try again.");
-    currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0 };
+    currentUser = { id: authUser.id, email: authUser.email, name: fallbackName, points: 0, confirmedOrders: 0 };
     updateUserUI();
   }
 }
@@ -736,8 +737,8 @@ async function doSignup() {
     return;
   }
 
-  // Step 2: Create the profile row with 50 welcome points
-  await sb.from("profiles").insert({ id: res.data.user.id, full_name: name, email: email, points: 50 });
+  // Step 2: Create the profile row — no welcome points, points are earned through real orders only
+  await sb.from("profiles").insert({ id: res.data.user.id, full_name: name, email: email, points: 0, confirmed_orders: 0 });
 
   // Step 3: Sign in immediately so the user has an active session right now
   // (Supabase signUp alone doesn't guarantee an active session if email confirm is on)
@@ -756,7 +757,7 @@ async function doSignup() {
   document.getElementById("su-name").value = "";
   document.getElementById("su-email").value = "";
   document.getElementById("su-pass").value = "";
-  showToast("Welcome to Era, " + name + "! You have 50 points to start with");
+  showToast("Welcome to Era, " + name + "! Earn points with every order");
 }
 
 async function doLogout() {
@@ -812,26 +813,36 @@ function hideSpin(id) { document.getElementById(id).classList.remove("show"); }
 function openPtsModal() {
   if (!currentUser) { openAuth(); return; }
   var pts = currentUser.points;
+  var hasConfirmedOrder = currentUser.confirmedOrders >= 1;
   document.getElementById("pts-modal-num").textContent = pts;
   var pct = Math.min(100, (pts / 500) * 100);
   document.getElementById("pts-fill").style.width = "0%";
-  var redeemable = MENU.filter(function(i) { return i.pts <= pts; }).sort(function(a,b) { return b.pts - a.pts; });
   var parts = [];
-  if (redeemable.length === 0) {
-    parts.push('<p class="redeem-empty-msg">Earn more points to unlock free dishes.</p>');
+
+  if (!hasConfirmedOrder) {
+    parts.push('<div class="redeem-locked-msg">');
+    parts.push('<p style="font-weight:600;color:var(--text-dark);margin-bottom:.4rem">Redemption locked</p>');
+    parts.push('<p style="font-size:.82rem;color:var(--text-muted);line-height:1.6">Complete your first real order to unlock the ability to redeem points. This prevents abuse and ensures points are earned fairly.</p>');
+    parts.push('</div>');
   } else {
-    for (var i = 0; i < redeemable.length; i++) {
-      var item = redeemable[i];
-      parts.push('<div class="redeem-row">');
-      parts.push('<img src="' + item.img + '" alt="' + item.name + '" loading="lazy">');
-      parts.push('<div class="redeem-row-info">');
-      parts.push('<div class="redeem-row-name">' + item.name + '</div>');
-      parts.push('<div class="redeem-row-pts">' + item.pts + ' pts - Worth EGP ' + item.price + '</div>');
-      parts.push('</div>');
-      parts.push('<button class="btn-redeem-sm" onclick="redeemDish(' + item.id + ')">Redeem</button>');
-      parts.push('</div>');
+    var redeemable = MENU.filter(function(i) { return i.pts <= pts; }).sort(function(a,b) { return b.pts - a.pts; });
+    if (redeemable.length === 0) {
+      parts.push('<p class="redeem-empty-msg">Keep ordering to earn more points and unlock free dishes.</p>');
+    } else {
+      for (var i = 0; i < redeemable.length; i++) {
+        var item = redeemable[i];
+        parts.push('<div class="redeem-row">');
+        parts.push('<img src="' + item.img + '" alt="' + item.name + '" loading="lazy">');
+        parts.push('<div class="redeem-row-info">');
+        parts.push('<div class="redeem-row-name">' + item.name + '</div>');
+        parts.push('<div class="redeem-row-pts">' + item.pts + ' pts - Worth EGP ' + item.price + '</div>');
+        parts.push('</div>');
+        parts.push('<button class="btn-redeem-sm" onclick="redeemDish(' + item.id + ')">Redeem</button>');
+        parts.push('</div>');
+      }
     }
   }
+
   document.getElementById("redeem-list").innerHTML = parts.join("");
   document.getElementById("pts-modal").classList.add("open");
   setTimeout(function() { document.getElementById("pts-fill").style.width = pct + "%"; }, 60);
@@ -841,10 +852,32 @@ function closePtsModal() { document.getElementById("pts-modal").classList.remove
 async function redeemDish(id) {
   var dish = null;
   for (var i = 0; i < MENU.length; i++) { if (MENU[i].id === id) { dish = MENU[i]; break; } }
-  if (!currentUser || currentUser.points < dish.pts) { showToast("Not enough points"); return; }
+  if (!currentUser) { showToast("Please sign in to redeem points"); return; }
+
+  // Must have at least 1 real confirmed order — blocks the new-account exploit
+  if (currentUser.confirmedOrders < 1) {
+    showToast("Complete your first order to unlock redemptions");
+    closePtsModal();
+    return;
+  }
+
+  if (currentUser.points < dish.pts) { showToast("Not enough points"); return; }
   if (!confirm("Redeem " + dish.name + " for free using " + dish.pts + " points?")) return;
-  currentUser.points -= dish.pts;
-  if (sb) { await sb.from("profiles").update({ points: currentUser.points }).eq("id", currentUser.id); }
+
+  // Deduct points server-side via a database function — client cannot fake the value
+  if (sb) {
+    var res = await sb.rpc("redeem_points", { p_user_id: currentUser.id, p_points_cost: dish.pts });
+    if (res.error || !res.data || !res.data.success) {
+      var msg = (res.data && res.data.message) ? res.data.message : "Could not redeem. Please try again.";
+      showToast(msg);
+      return;
+    }
+    currentUser.points = res.data.new_balance;
+  } else {
+    // Offline fallback (no DB connected)
+    currentUser.points -= dish.pts;
+  }
+
   var found = false;
   for (var i = 0; i < cart.length; i++) { if (cart[i].id === id && cart[i].free) { cart[i].qty++; found = true; break; } }
   if (!found) { var c = {}; for (var k in dish) { c[k] = dish[k]; } c.qty = 1; c.free = true; cart.push(c); }
@@ -857,7 +890,8 @@ function renderMenu(filter) {
   var parts = [];
   for (var i = 0; i < items.length; i++) {
     var item = items[i];
-    var canRedeem = currentUser && currentUser.points >= item.pts;
+    var hasConfirmedOrder = currentUser && currentUser.confirmedOrders >= 1;
+    var canRedeem = hasConfirmedOrder && currentUser.points >= item.pts;
     parts.push('<div class="dish-card reveal">');
     parts.push('<div class="dish-img-wrap">');
     parts.push('<img src="' + item.img + '" alt="' + item.name + '" loading="lazy">');
@@ -875,7 +909,9 @@ function renderMenu(filter) {
     parts.push('<span class="dish-pts">' + item.pts + ' pts</span>');
     parts.push('<div class="dish-actions">');
     if (currentUser) {
-      if (canRedeem) {
+      if (!hasConfirmedOrder) {
+        parts.push('<button class="redeem-btn" disabled title="Complete your first order to unlock">Order to unlock</button>');
+      } else if (canRedeem) {
         parts.push('<button class="redeem-btn" onclick="quickRedeem(' + item.id + ')">Redeem</button>');
       } else {
         parts.push('<button class="redeem-btn" disabled>' + item.pts + ' pts needed</button>');
@@ -934,27 +970,37 @@ function renderCart() {
     var item = cart[i];
     parts.push('<div class="cart-item">');
     parts.push('<div class="cart-item-info">');
-    parts.push('<h4>' + item.name + (item.free ? ' (Free)' : '') + '</h4>');
-    parts.push('<p>' + (item.free ? 'Redeemed' : 'EGP ' + item.price) + ' x ' + item.qty + ' = ' + (item.free ? 'Free' : 'EGP ' + (item.price * item.qty)) + '</p>');
+    parts.push('<h4>' + item.name + (item.free ? ' (Redeemed)' : '') + '</h4>');
+    parts.push('<p>' + (item.free ? 'Free reward' : 'EGP ' + item.price) + ' x ' + item.qty + ' = ' + (item.free ? 'Free' : 'EGP ' + (item.price * item.qty)) + '</p>');
     parts.push('</div>');
     parts.push('<div class="cart-qty">');
     parts.push('<button class="qty-btn" onclick="chQty(' + item.id + ',' + (item.free ? 1 : 0) + ',-1)">-</button>');
     parts.push('<span>' + item.qty + '</span>');
-    parts.push('<button class="qty-btn" onclick="chQty(' + item.id + ',' + (item.free ? 1 : 0) + ',1)">+</button>');
+    // Free items: NO + button — qty is fixed at what was redeemed, cannot be incremented
+    if (!item.free) {
+      parts.push('<button class="qty-btn" onclick="chQty(' + item.id + ',' + 0 + ',1)">+</button>');
+    } else {
+      parts.push('<span style="width:26px;display:inline-block"></span>');
+    }
     parts.push('</div></div>');
   }
   document.getElementById("cart-items").innerHTML = parts.join("");
   var totalPrice = 0;
   var totalPts = 0;
   for (var i = 0; i < cart.length; i++) {
-    if (!cart[i].free) { totalPrice += cart[i].price * cart[i].qty; }
-    totalPts += cart[i].pts * cart[i].qty;
+    // Free/redeemed items: never count toward price OR points earned
+    if (!cart[i].free) {
+      totalPrice += cart[i].price * cart[i].qty;
+      totalPts += cart[i].pts * cart[i].qty;
+    }
   }
   document.getElementById("cart-total").textContent = "EGP " + totalPrice;
   document.getElementById("cart-pts-line").textContent = "You will earn " + totalPts + " points on this order";
 }
 
 function chQty(id, isFree, delta) {
+  // Never allow incrementing a redeemed (free) item — qty is fixed at redemption time
+  if (isFree && delta > 0) { showToast("Redeemed items cannot be duplicated"); return; }
   var idx = -1;
   for (var i = 0; i < cart.length; i++) {
     if (cart[i].id === id && !!cart[i].free === !!isFree) { idx = i; break; }
@@ -976,8 +1022,11 @@ function generateOrderCode() {
 async function createPendingOrder(channel) {
   var totalPrice = 0, totalPts = 0;
   for (var i = 0; i < cart.length; i++) {
-    if (!cart[i].free) { totalPrice += cart[i].price * cart[i].qty; }
-    totalPts += cart[i].pts * cart[i].qty;
+    // Free/redeemed items: excluded from both price AND points earned
+    if (!cart[i].free) {
+      totalPrice += cart[i].price * cart[i].qty;
+      totalPts += cart[i].pts * cart[i].qty;
+    }
   }
   var code = generateOrderCode();
   var itemsPayload = cart.map(function(i) { return { name: i.name, qty: i.qty, price: i.price, free: !!i.free }; });
